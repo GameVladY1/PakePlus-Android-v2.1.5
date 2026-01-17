@@ -1,11 +1,3982 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WebStudio - Unity-like Editor</title>
+    <style>
+        :root {
+            --bg-darker: #090909;
+            --bg-dark: #111111;
+            --bg-panel: #181818;
+            --bg-input: #252525;
+            --accent: #00a2ff;
+            --accent-hover: #33b5ff;
+            --border: #2a2a2a;
+            --border-light: #3a3a3a;
+            --text-main: #efefef;
+            --text-dim: #888888;
+            --glass: rgba(255, 255, 255, 0.03);
+            --panel-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-darker);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* Top Menu Bar */
+        .top-bar {
+            height: 44px;
+            background-color: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            z-index: 100;
+            gap: 4px;
+        }
+        
+        /* Custom Scrollbar for Top Bar */
+        .top-bar::-webkit-scrollbar {
+            height: 3px;
+        }
+        .top-bar::-webkit-scrollbar-track {
+            background: var(--bg-darker);
+        }
+        .top-bar::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .dropdown-menu {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 80% !important;
+                max-width: 300px !important;
+            }
+        }
+
+        .menu-item {
+            padding: 0 10px;
+            height: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            color: var(--text-dim);
+            gap: 8px;
+        }
+        .menu-item a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .menu-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+        /* Dropdown Styles */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-width: 180px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            z-index: 1000;
+            padding: 4px;
+            margin-top: 4px;
+        }
+        .dropdown-menu.visible {
+            display: block;
+        }
+        .dropdown-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            color: var(--text-dim);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .dropdown-item:hover {
+            background: var(--bg-input);
+            color: white;
+        }
+        .menu-item:hover {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+        }
+        .menu-item.active {
+            color: var(--accent);
+            background: rgba(0, 162, 255, 0.1);
+        }
+        /* Main Layout */
+        .main {
+            flex: 1;
+            display: flex;
+            height: calc(100% - 48px);
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .top-bar {
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 6px; /* Added padding for scrollbar visibility */
+            }
+            
+            .explorer {
+                position: absolute;
+                left: -240px;
+                height: 100%;
+                z-index: 50;
+                transition: left 0.3s ease;
+                box-shadow: 10px 0 20px rgba(0,0,0,0.5);
+            }
+            .explorer.mobile-visible {
+                left: 0;
+            }
+
+            .properties {
+                position: absolute;
+                right: -280px;
+                height: 100%;
+                z-index: 50;
+                transition: right 0.3s ease;
+                box-shadow: -10px 0 20px rgba(0,0,0,0.5);
+            }
+            .properties.mobile-visible {
+                right: 0;
+            }
+
+            .scene-view {
+                width: 100% !important;
+            }
+
+            .welcome-menu {
+                flex-direction: column !important;
+            }
+            .welcome-sidebar {
+                display: none !important;
+            }
+            .welcome-main {
+                padding: 20px !important;
+                padding-bottom: 100px !important;
+            }
+            .template-card {
+                padding: 15px 10px !important;
+            }
+            .template-icon {
+                width: 40px !important;
+                height: 40px !important;
+            }
+            .template-title {
+                font-size: 15px !important;
+            }
+            .template-description {
+                font-size: 12px !important;
+            }
+            
+            .mobile-bottom-nav {
+                display: flex !important;
+            }
+            
+            .studio-mobile-nav {
+                display: flex !important;
+            }
+            
+            #joystick-container {
+                display: block !important;
+            }
+        }
+
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border);
+            z-index: 2500;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-dim);
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .mobile-nav-item.active {
+            color: var(--accent);
+        }
+        .mobile-nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .studio-mobile-nav {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            z-index: 60;
+            gap: 12px;
+        }
+        
+        .studio-mobile-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: 1px solid var(--border);
+        }
+        .studio-mobile-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        #joystick-container {
+            display: none;
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 100px;
+            height: 100px;
+            z-index: 55;
+            pointer-events: none;
+        }
+        #joystick-container > * { pointer-events: auto; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Explorer Panel */
+        .explorer {
+            width: 240px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+        }
+        .panel-header h2 {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-dim);
+            margin: 0;
+        }
+        .explorer ul {
+            list-style: none;
+            padding: 6px 0;
+            margin: 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .explorer li {
+            font-size: 13px;
+            border-radius: 4px;
+            margin: 1px 6px;
+            transition: all 0.1s ease;
+            cursor: pointer;
+            user-select: none;
+            color: #ccc;
+            display: flex;
+            flex-direction: column;
+        }
+        .explorer .item-row {
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 4px;
+        }
+        .explorer .item-row:hover {
+            background-color: var(--bg-input);
+            color: white;
+        }
+        .explorer .item-row:hover .item-actions {
+            opacity: 1;
+        }
+        .explorer .item-row.selected {
+            background-color: var(--accent);
+            color: #fff;
+        }
+        .item-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 2px;
+            cursor: pointer;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+        }
+        .action-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .action-btn.active {
+            color: #ffcc00;
+        }
+        .explorer .item-row.drag-over {
+            background-color: rgba(0, 162, 255, 0.3);
+            outline: 2px dashed var(--accent);
+        }
+        .explorer li:hover {
+            background-color: var(--bg-input);
+            color: white;
+        }
+        .explorer li svg {
+            width: 14px;
+            height: 14px;
+            stroke-width: 2;
+            fill: none;
+            stroke: currentColor;
+            flex-shrink: 0;
+        }
+        .expand-btn {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: transform 0.2s;
+            font-size: 8px;
+        }
+        .expand-btn.expanded {
+            transform: rotate(90deg);
+        }
+        .expand-btn.hidden {
+            visibility: hidden;
+        }
+        .children-container {
+            display: none;
+            margin-left: 18px;
+            border-left: 1px solid var(--border);
+            padding-left: 4px;
+        }
+        .children-container.visible {
+            display: block;
+        }
+        /* Scene View */
+        .scene-view {
+            flex: 1;
+            background-color: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Properties Panel */
+        .properties {
+            width: 280px;
+            background-color: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .properties .section {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+        .section-header {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-dim);
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .properties .property {
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .properties label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-dim);
+        }
+        .properties input, .properties select {
+            width: 100%;
+            padding: 5px 8px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            transition: border-color 0.15s ease;
+        }
+        .properties input:focus, .properties select:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+        .properties input[type="number"] {
+            width: 60px;
+            text-align: center;
+        }
+        .properties .vector-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .properties .vector-input label {
+            width: 20px;
+            color: #999;
+            text-align: center;
+        }
+        .properties input[type="color"] {
+            height: 35px;
+            padding: 2px;
+        }
+        /* Explorer Search */
+        .explorer-search-container {
+            padding: 4px 10px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .explorer-search-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            color: white;
+            padding: 4px 8px;
+            font-size: 11px;
+            width: 100%;
+            outline: none;
+        }
+        .explorer-search-input:focus {
+            border-color: var(--accent);
+        }
+        /* Settings Modal Grid */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .settings-category {
+            background: rgba(255,255,255,0.02);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .settings-category h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .settings-option span {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #050505;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        .loader-bar-container {
+            width: 240px;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .loader-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent);
+            transition: width 0.4s ease;
+        }
+        #loading-screen h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, #0078d4, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        /* Footer */
+        .footer {
+            height: 30px;
+            background-color: #1a1a1a;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+        /* Animations */
+        .menu-item, .explorer li {
+            transition: background-color 0.3s;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            position: relative;
+            width: 85%;
+            max-width: 900px;
+            height: 85%;
+            max-height: 90vh; /* Ensure modal stays within viewport */
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            box-sizing: border-box;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-dark);
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .modal-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        .close-button {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            cursor: pointer;
+            fill: var(--text-dim);
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .close-button:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .close-button svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+        }
+        .modal-scene {
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .modal-button {
+            padding: 10px 20px;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+        .modal-button:hover {
+            background-color: #106ebe;
+        }
+        .file-input {
+            display: none;
+        }
+        /* Script Editor Redesign */
+        .script-blocks-editor {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+            background: var(--bg-panel);
+        }
+        .blocks-palette {
+            width: 220px;
+            background: var(--bg-dark);
+            padding: 16px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .blocks-workspace {
+            flex: 1;
+            background: #151515;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 30px;
+            min-height: 300px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .block {
+            background: #4CAF50;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: move;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .block:hover {
+            transform: translateY(-2px);
+        }
+        .block[data-type="gravity"] {
+            background: #2196F3;
+        }
+        .block[data-type="spin"] {
+            background: #FF4081;
+        }
+        .block[data-type="player"] {
+            background: #673AB7;
+        }
+        .block-content {
+            color: white;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .block-value {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 80px;
+        }
+        .block-value:focus {
+            outline: 2px solid rgba(255,255,255,0.4);
+        }
+        .verified-badge {
+            background: #00a2ff;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+        .verified-badge svg {
+            width: 10px !important;
+            height: 10px !important;
+            margin: 0 !important;
+            fill: white;
+        }
+        .unverified-warning {
+            background: rgba(255, 166, 0, 0.1);
+            border: 1px solid rgba(255, 166, 0, 0.3);
+            color: #ffa600;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stats-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 10px;
+            color: #00ff88;
+            pointer-events: none;
+            z-index: 80;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .upload-button {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            width: fit-content;
+        }
+        .upload-button:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0, 162, 255, 0.4);
+        }
+        /* Warning Banner */
+        .warning-banner {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .warning-icon {
+            width: 24px;
+            height: 24px;
+            fill: #856404;
+        }
+        /* Play/Stop Button in Top Bar */
+        #play-button.active {
+            color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+        #play-button.active svg {
+            fill: #ff4444;
+        }
+        #play-button svg {
+            fill: currentColor;
+        }
+        .script-icon {
+            color: #ffd700;
+        }
+
+        .cube-icon {
+            color: #4CAF50;
+        }
+
+        .baseplate-icon {
+            color: #9e9e9e;
+        }
+
+        .circle-icon {
+            color: #2196F3;
+        }
+
+        .stickman-icon {
+            color: #FF9800;
+        }
+        
+        /* File Input Styling */
+        .custom-file-upload {
+            display: inline-block;
+            padding: 8px 12px;
+            cursor: pointer;
+            background-color: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .custom-file-upload:hover {
+            background-color: #3d3d3d;
+            border-color: #0078d4;
+        }
+        
+        /* Welcome Menu Modal Redesign */
+        .welcome-menu {
+            display: flex;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            color: white;
+            box-sizing: border-box;
+            transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1), opacity 0.5s ease;
+        }
+
+        .welcome-menu.hide {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .welcome-sidebar {
+            width: 260px;
+            background: #111;
+            border-right: 1px solid var(--border);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .welcome-sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            padding: 0 10px;
+            background: linear-gradient(45deg, #0078d4, #00b294);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .sidebar-nav-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-dim);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .sidebar-nav-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .sidebar-nav-item svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .welcome-main {
+            flex: 1;
+            padding: 60px;
+            overflow-y: auto;
+            background: radial-gradient(circle at top right, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .welcome-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .welcome-section.active {
+            display: block;
+        }
+
+        .welcome-header {
+            margin-bottom: 40px;
+        }
+
+        .welcome-header h2 {
+            font-size: 32px;
+            margin: 0 0 10px 0;
+        }
+
+        .welcome-header p {
+            color: var(--text-dim);
+            margin: 0;
+        }
+
+        .welcome-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .template-card {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .template-card:nth-child(1) { animation-delay: 0.1s; }
+        .template-card:nth-child(2) { animation-delay: 0.2s; }
+        .template-card:nth-child(3) { animation-delay: 0.3s; }
+        .template-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(30px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .template-card:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        }
+
+        .template-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            fill: #fff;
+        }
+
+        .template-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .template-description {
+            font-size: 14px;
+            color: #999;
+            line-height: 1.4;
+        }
+        
+        /* Delete Button */
+        .delete-button {
+            background-color: #d83b01;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .delete-button:hover {
+            background-color: #a42e01;
+        }
+
+        .delete-all-blocks {
+            background-color: #d83b01;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            margin: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .delete-all-blocks:hover {
+            background-color: #a42e01;
+        }
+        
+        /* Editor styles */
+        .editor-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-input);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .editor-tab {
+            padding: 6px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .editor-tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 300px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', monospace;
+            padding: 15px;
+            border: none;
+            resize: none;
+            outline: none;
+        }
+
+        .keyword {
+            color: #569cd6;
+        }
+
+        .value {
+            color: #ce9178;
+        }
+
+        .number {
+            color: #b5cea8;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h1>WEBSTUDIO</h1>
+        <div class="loader-bar-container">
+            <div class="loader-bar-fill" id="loader-fill"></div>
+        </div>
+        <p style="font-size: 10px; color: #444; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;">Loading Assets...</p>
+    </div>
+
+    <div class="welcome-menu" id="welcome-menu">
+        <div class="mobile-bottom-nav">
+            <div class="mobile-nav-item" id="mob-create">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                <span>Create</span>
+            </div>
+            <div class="mobile-nav-item active" id="mob-templates">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Templates</span>
+            </div>
+            <div class="mobile-nav-item" id="mob-settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                <span>Settings</span>
+            </div>
+        </div>
+        <div class="welcome-sidebar">
+            <h1>WebStudio</h1>
+            <div class="sidebar-nav-item" id="sidebar-create">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Create Project
+            </div>
+            <div class="sidebar-nav-item active" id="sidebar-templates">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Templates
+            </div>
+            <div class="sidebar-nav-item" id="sidebar-settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                Settings
+            </div>
+        </div>
+        <div class="welcome-main">
+            <div class="welcome-section active" id="section-templates">
+                <div class="welcome-header">
+                    <h2>Templates</h2>
+                    <p>Kickstart your creation with a pre-built scene.</p>
+                </div>
+                <div class="welcome-grid">
+                    <div class="template-card" id="cube-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9z"/>
+                        </svg>
+                        <div class="template-title">Basic Cube</div>
+                        <div class="template-description">Start with a simple cube scene</div>
+                    </div>
+                    <div class="template-card" id="circle-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                        </svg>
+                        <div class="template-title">Circle Scene</div>
+                        <div class="template-description">Begin with a circle-based layout</div>
+                    </div>
+                    <div class="template-card" id="stickman-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M12 4a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm4.5 6h-9a.5.5 0 0 0-.5.5V12h2v9h6v-9h2v-1.5a.5.5 0 0 0-.5-.5z"/>
+                        </svg>
+                        <div class="template-title">Stickman World</div>
+                        <div class="template-description">Start with a stickman character</div>
+                    </div>
+                    <div class="template-card" id="physics-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        <div class="template-title">Physics Play</div>
+                        <div class="template-description">Chaos with falling cubes</div>
+                    </div>
+                    <div class="template-card" id="museum-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M12 3L4 9v12h16V9l-8-6zM9 21v-6h6v6"/>
+                        </svg>
+                        <div class="template-title">Mini Gallery</div>
+                        <div class="template-description">A simple showcase layout</div>
+                    </div>
+                    <div class="template-card" id="forest-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                        </svg>
+                        <div class="template-title">Forest Grove</div>
+                        <div class="template-description">Peaceful trees and nature</div>
+                    </div>
+                    <div class="template-card" id="city-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M15 11V5l-3-3-3 3v2H3v14h18V11h-6zm-8 8H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm6 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm6 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
+                        </svg>
+                        <div class="template-title">Sky City</div>
+                        <div class="template-description">Looming skyscrapers layout</div>
+                    </div>
+                    <div class="template-card" id="sci-fi-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" transform="rotate(180 12 12)"/>
+                            <circle cx="12" cy="12" r="4"/>
+                        </svg>
+                        <div class="template-title">Sci-Fi Hub</div>
+                        <div class="template-description">Advanced technology base</div>
+                    </div>
+                    <div class="template-card" id="dungeon-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M18 8h-1V7c0-2.76-2.24-5-5-5S7 4.24 7 7v1H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 7c0-1.66 1.34-3 3-3s3 1.34 3 3v1H9V7z"/>
+                        </svg>
+                        <div class="template-title">Dark Dungeon</div>
+                        <div class="template-description">Explore the deep stone halls</div>
+                    </div>
+                    <div class="template-card" id="car-template">
+                        <svg class="template-icon" viewBox="0 0 24 24">
+                            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                        </svg>
+                        <div class="template-title">Vehicle Kit</div>
+                        <div class="template-description">A basic car block setup</div>
+                    </div>
+                    <div class="template-card" id="lava-template">
+                        <svg class="template-icon" viewBox="0 0 24 24" fill="#ff4400"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        <div class="template-title">Lava Pit</div>
+                        <div class="template-description">Hot hazards and dark rock</div>
+                    </div>
+                    <div class="template-card" id="moon-template">
+                        <svg class="template-icon" viewBox="0 0 24 24" fill="#ccc"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="8" r="1.5" fill="#999"/><circle cx="15" cy="10" r="2.5" fill="#999"/><circle cx="10" cy="16" r="2" fill="#999"/></svg>
+                        <div class="template-title">Moon Base</div>
+                        <div class="template-description">Low gravity crater zone</div>
+                    </div>
+                    <div class="template-card" id="zen-template">
+                        <svg class="template-icon" viewBox="0 0 24 24" fill="#4CAF50"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+                        <div class="template-title">Zen Garden</div>
+                        <div class="template-description">Peaceful sand and stones</div>
+                    </div>
+                    <div class="template-card" id="obby-template">
+                        <svg class="template-icon" viewBox="0 0 24 24" fill="#FFC107"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        <div class="template-title">Obstacle Course</div>
+                        <div class="template-description">Floating platforms and jumps</div>
+                    </div>
+                    <div class="template-card" id="traffic-template">
+                        <svg class="template-icon" viewBox="0 0 24 24" fill="#607D8B"><path d="M20 10V7l-3-3H7L4 7v3H2v6h2v3h2v-3h12v3h2v-3h2v-6h-2zM6 9h12v2H6V9z"/></svg>
+                        <div class="template-title">Traffic Jam</div>
+                        <div class="template-description">Busy highway layout</div>
+                    </div>
+                </div>
+            </div>
+            <div class="welcome-section" id="section-settings">
+                <div class="welcome-header">
+                    <h2>Studio Settings</h2>
+                    <p>Global preferences for your editor experience.</p>
+                </div>
+                <div class="settings-grid" style="grid-template-columns: 1fr;">
+                    <div class="settings-category">
+                        <h3>General</h3>
+                        <p style="font-size: 14px; color: var(--text-dim);">Studio Version: 1.2.0-beta</p>
+                        <p style="font-size: 14px; color: var(--text-dim);">Rendering Engine: Three.js r149</p>
+                    </div>
+                    <div class="settings-category">
+                        <h3>Credits</h3>
+                        <p style="font-size: 16px; color: var(--text-main);">Made by: <span style="color: var(--accent); font-weight: 800; letter-spacing: 0.5px;">@GameVladY</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Top Menu Bar -->
+    <div class="top-bar">
+        <div class="menu-item" id="file-button">
+            <svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            <span>File</span>
+        </div>
+        <div class="menu-item" id="insert-button">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Insert</span>
+        </div>
+        <div class="menu-item" id="tools-button" style="position: relative;">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77z"/></svg>
+            <span>Tools</span>
+            <div class="dropdown-menu" id="tools-dropdown">
+                <div class="dropdown-item" id="tool-focus">Focus Selected (F)</div>
+                <div class="dropdown-item" id="tool-snap">Snap to Grid</div>
+                <div class="dropdown-item" id="tool-random-rot">Randomize Rotation</div>
+                <div class="dropdown-item" id="tool-reset-transform">Reset Transform</div>
+                <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                <div class="dropdown-item" id="tool-select-all">Select All Meshes</div>
+                <div class="dropdown-item" id="tool-clear-all" style="color: #ff4444;">Clear Scene</div>
+            </div>
+        </div>
+        <div style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
+        <div class="menu-item" id="play-button">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <span>Play</span>
+        </div>
+        <div style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
+        <div class="menu-item active" id="mode-translate" title="Move Tool">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14M12 5l-3 3m3-3l3 3m-3 11l-3-3m3 3l3-3M5 12l3-3m-3 3l3 3m11-3l-3-3m3 3l-3 3"/></svg>
+            <span>Move</span>
+        </div>
+        <div class="menu-item" id="mode-rotate" title="Rotate Tool">
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            <span>Rotate</span>
+        </div>
+        <div class="menu-item" id="mode-scale" title="Scale Tool">
+            <svg viewBox="0 0 24 24"><path d="M21 3L3 21M21 21L3 3M21 12h-3M3 12h3M12 3v3M12 21v-3"/></svg>
+            <span>Scale</span>
+        </div>
+        <div style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
+        <div class="menu-item" id="toggle-snap" title="Snap to Grid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            <span id="snap-label">Snap Off</span>
+        </div>
+        <div style="flex: 1;"></div>
+        <div class="menu-item" id="settings-button">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </div>
+    </div>
+    <!-- Main Layout -->
+    <div class="main">
+        <!-- Explorer Panel -->
+        <div class="explorer">
+            <div class="panel-header">
+                <h2>Explorer</h2>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+            <div class="explorer-search-container">
+                <input type="text" class="explorer-search-input" id="explorer-search" placeholder="Search objects...">
+            </div>
+            <ul id="object-list">
+                <!-- Dynamically populated -->
+            </ul>
+        </div>
+        <!-- Scene View -->
+        <div class="scene-view" id="scene">
+            <div class="stats-panel" id="stats-panel">
+                FPS: 0 <br>
+                OBJ: 0
+            </div>
+            <!-- 3D content will be rendered here -->
+            <div id="joystick-container"></div>
+            
+            <div class="studio-mobile-nav">
+                <div class="studio-mobile-btn" id="mob-toggle-explorer">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </div>
+                <div class="studio-mobile-btn active" id="mob-toggle-scene">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                </div>
+                <div class="studio-mobile-btn" id="mob-toggle-properties">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"/></svg>
+                </div>
+            </div>
+        </div>
+        <!-- Properties Panel -->
+        <div class="properties">
+            <div class="section">
+                <div class="section-header">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    General
+                </div>
+                <div class="property">
+                    <label for="object-name">Object Name</label>
+                    <input type="text" id="object-name" placeholder="e.g. Cube_1">
+                </div>
+                <div class="property">
+                    <label for="object-tags">Tags (comma separated)</label>
+                    <input type="text" id="object-tags" placeholder="interactive, floor, decoration">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    Transform
+                </div>
+                <div class="property">
+                    <label>Position</label>
+                    <input type="text" id="object-position" placeholder="0, 0, 0">
+                </div>
+                <div class="property">
+                    <label>Rotation</label>
+                    <input type="text" id="object-rotation" placeholder="0, 0, 0">
+                </div>
+                <div class="property">
+                    <label>Scale</label>
+                    <input type="text" id="object-scale" placeholder="1, 1, 1">
+                </div>
+            </div>
+
+            <div class="section" id="world-settings-section" style="display: none;">
+                <div class="section-header">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2l3 3-3 3v2M5 20v-2l-3-3 3-3v-2"/></svg>
+                    World Settings
+                </div>
+                <div class="property">
+                    <label>Sky Color</label>
+                    <input type="color" id="world-sky-color" value="#87CEEB">
+                </div>
+                <div class="property">
+                    <label>Ambient Intensity</label>
+                    <input type="range" id="world-ambient-intensity" min="0" max="2" step="0.1" value="0.5">
+                </div>
+                <div class="property">
+                    <label>Sun Intensity</label>
+                    <input type="range" id="world-sun-intensity" min="0" max="5" step="0.1" value="0.8">
+                </div>
+                <div class="property" style="flex-direction: row; align-items: center; justify-content: space-between;">
+                    <label>Enable Fog</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="world-fog-enabled">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section" id="object-material-section">
+                <div class="section-header">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><rect x="2" y="2" width="20" height="20" rx="2"/></svg>
+                    Material
+                </div>
+                <div class="property">
+                    <label>Base Color</label>
+                    <input type="color" id="object-color" value="#00ff00">
+                </div>
+                <div class="property">
+                    <label>Texture Map</label>
+                    <label class="custom-file-upload">
+                        <input type="file" id="object-texture" accept="image/*" style="display: none;">
+                        Upload Image
+                    </label>
+                </div>
+                <div class="property">
+                    <label>Metalness</label>
+                    <input type="range" id="object-metalness" min="0" max="1" step="0.01" value="0">
+                </div>
+                <div class="property">
+                    <label>Roughness</label>
+                    <input type="range" id="object-roughness" min="0" max="1" step="0.01" value="0.5">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Visibility & Rendering
+                </div>
+                <div class="property" style="flex-direction: row; align-items: center; justify-content: space-between;">
+                    <label>Visible</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="object-visible" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="property" style="flex-direction: row; align-items: center; justify-content: space-between;">
+                    <label>Wireframe</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="object-wireframe">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="property" style="flex-direction: row; align-items: center; justify-content: space-between;">
+                    <label>Cast Shadows</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="object-cast-shadows" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="property">
+                    <label>Opacity</label>
+                    <input type="range" id="object-opacity" min="0" max="1" step="0.01" value="1">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9m3.3-3L11 7l3.3 3M4 17h9m-3.3-3L13 17l-3.3 3"/></svg>
+                    Physics Settings
+                </div>
+                <div class="property">
+                    <label>Bounciness</label>
+                    <input type="range" id="physics-bounciness" min="0" max="1.5" step="0.05" value="0.5">
+                </div>
+                <div class="property">
+                    <label>Friction</label>
+                    <input type="range" id="physics-friction" min="0" max="1" step="0.05" value="0.1">
+                </div>
+                <div class="property">
+                    <label>Mass</label>
+                    <input type="number" id="physics-mass" value="1" step="0.1">
+                </div>
+            </div>
+
+            <div style="padding: 12px; margin-top: auto;">
+                <button class="delete-button" id="delete-object">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                    Delete Object
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div class="footer"></div>
+    <!-- Insert Modal -->
+    <div class="modal" id="insert-modal">
+        <div class="modal-content" style="max-width: 400px; height: auto; max-height: 80vh;">
+            <div class="modal-header">
+                <h2 style="font-size: 14px;">Insert</h2>
+                <button class="close-button" id="close-insert-modal">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 12px;">
+                <div class="marketplace-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div class="marketplace-item" id="insert-cube" style="padding: 10px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" style="margin-bottom: 8px; stroke: var(--accent); fill: none; stroke-width: 2;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                        <div>Cube</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-circle" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: var(--accent); fill: none; stroke-width: 2.5;"><circle cx="12" cy="12" r="10"/></svg>
+                        <div style="font-size: 11px;">Circle</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-stickman" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: var(--accent); fill: none; stroke-width: 2.5;"><path d="M12 7a2 2 0 100-4 2 2 0 000 4zM12 7v7m0 0l-4 5m4-5l4 5m-4-10H8m4 0h4"/></svg>
+                        <div style="font-size: 11px;">Stickman</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-sphere" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: var(--accent); fill: none; stroke-width: 2.5;"><circle cx="12" cy="12" r="9"/></svg>
+                        <div style="font-size: 11px;">Sphere</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-cylinder" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: var(--accent); fill: none; stroke-width: 2.5;"><ellipse cx="12" cy="5" rx="6" ry="2"/><path d="M6 5v14c0 1.1 2.7 2 6 2s6-.9 6-2V5"/></svg>
+                        <div style="font-size: 11px;">Cylinder</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-torus" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: var(--accent); fill: none; stroke-width: 2.5;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+                        <div style="font-size: 11px;">Torus</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-cone" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: var(--accent); fill: none; stroke-width: 2.5;"><path d="M12 2L4 18c0 1.1 3.6 2 8 2s8-.9 8-2L12 2z"/></svg>
+                        <div style="font-size: 11px;">Cone</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-plane" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: var(--accent); fill: none; stroke-width: 2.5;"><path d="M2 12h20M12 2v20"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                        <div style="font-size: 11px;">Plane</div>
+                    </div>
+                    <div class="marketplace-item" id="insert-script" style="padding: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style="margin-bottom: 4px; stroke: #ffd700; fill: none; stroke-width: 2.5;"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+                        <div style="font-size: 11px;">Script</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Script Editor Modal -->
+    <div class="modal" id="script-editor-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <h2>Script Editor</h2>
+                    <div class="editor-tabs">
+                        <button class="editor-tab active" id="blocks-tab">Blocks</button>
+                        <button class="editor-tab" id="code-tab">Code</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="modal-button" id="save-script" style="padding: 6px 12px; font-size: 12px;">Save</button>
+                    <button class="close-button" id="close-script-editor">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="script-blocks-editor" style="flex: 1; overflow: hidden;">
+                <div id="blocks-view" style="display: flex; width: 100%; height: 100%;">
+                    <div class="blocks-palette">
+                        <div class="block" data-type="gravity" draggable="true">
+                            <div class="block-content">Gravity <select class="block-value"><option>true</option><option>false</option></select></div>
+                        </div>
+                        <div class="block" data-type="spin" draggable="true">
+                            <div class="block-content">Spin <input type="number" class="block-value" value="1" min="0" max="10" step="0.1"></div>
+                        </div>
+                        <div class="block" data-type="player" draggable="true">
+                            <div class="block-content">Player <select class="block-value"><option>true</option><option>false</option></select></div>
+                        </div>
+                        <div class="block" data-type="moveX" draggable="true" style="background: #FF9800;">
+                            <div class="block-content">Move X <input type="number" class="block-value" value="0" step="0.01"></div>
+                        </div>
+                        <div class="block" data-type="moveY" draggable="true" style="background: #FF9800;">
+                            <div class="block-content">Move Y <input type="number" class="block-value" value="0" step="0.01"></div>
+                        </div>
+                        <div class="block" data-type="moveZ" draggable="true" style="background: #FF9800;">
+                            <div class="block-content">Move Z <input type="number" class="block-value" value="0" step="0.01"></div>
+                        </div>
+                        <div class="block" data-type="size" draggable="true" style="background: #9C27B0;">
+                            <div class="block-content">Size <input type="number" class="block-value" value="1" step="0.1"></div>
+                        </div>
+                        <div class="block" data-type="jumpPower" draggable="true" style="background: #E91E63;">
+                            <div class="block-content">Jump Power <input type="number" class="block-value" value="5" step="0.5"></div>
+                        </div>
+                        <div style="flex: 1;"></div>
+                        <button class="delete-all-blocks" id="delete-all-blocks" style="margin: 0; width: 100%; font-size: 11px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            Clear All
+                        </button>
+                    </div>
+                    <div class="blocks-workspace" id="blocks-workspace"></div>
+                </div>
+                <div id="code-view" style="display: none; width: 100%; height: 100%;">
+                    <textarea class="code-editor" id="code-editor" spellcheck="false" style="height: 100%;">// Simple script configuration
+gravity: false
+spin: 1.0
+player: true</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- File Modal -->
+    <div class="modal" id="file-modal">
+        <div class="modal-content" style="max-width: 500px; height: auto;">
+            <div class="modal-header">
+                <h2>File Operations</h2>
+                <button class="close-button" id="close-file-modal">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label for="import-obj" class="modal-button" style="justify-content: center; background: var(--bg-input); border: 1px solid var(--border);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5-5 5 5M12 15V5"/></svg>
+                        Import .obj
+                    </label>
+                    <label for="import-glb" class="modal-button" style="justify-content: center; background: var(--bg-input); border: 1px solid var(--border);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5-5 5 5M12 15V5"/></svg>
+                        Import .glb
+                    </label>
+                    <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
+                    <button class="modal-button" id="export-button" style="justify-content: center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
+                        Export Project (.json)
+                    </button>
+                    <button class="modal-button" id="export-html-button" style="justify-content: center; background: #2e7d32;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
+                        Export Project (.html)
+                    </button>
+                    <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
+                    <button class="modal-button" id="leave-studio-button" style="justify-content: center; background: #c62828;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                        Leave Studio
+                    </button>
+                    <input type="file" id="import-obj" accept=".obj" class="file-input">
+                    <input type="file" id="import-glb" accept=".glb,.gltf" class="file-input">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content" style="max-width: 800px; height: auto;">
+            <div class="modal-header">
+                <h2>Studio Settings</h2>
+                <button class="close-button" id="close-settings-modal">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-grid">
+                    <div class="settings-category">
+                        <h3>View</h3>
+                        <div class="settings-option">
+                            <span>Show Grid</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-show-grid" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-option">
+                            <span>Show Skybox</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-show-sky" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-option" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <span>Grid Color</span>
+                            <input type="color" id="setting-grid-color" value="#444444" style="height: 24px; padding: 0;">
+                        </div>
+                    </div>
+                    <div class="settings-category">
+                        <h3>Controls</h3>
+                        <div class="settings-option" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <span>Camera Sensitivity</span>
+                            <input type="range" id="setting-cam-sensitivity" min="0.001" max="0.01" step="0.001" value="0.002" style="width: 100%;">
+                        </div>
+                        <div class="settings-option" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <span>Move Speed</span>
+                            <input type="range" id="setting-move-speed" min="0.05" max="0.5" step="0.05" value="0.15" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div class="settings-category">
+                        <h3>Graphics</h3>
+                        <div class="settings-option">
+                            <span>Enable Shadows</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-shadows" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-option">
+                            <span>Post Processing</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="setting-postprocess">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-category">
+                        <h3>Editor</h3>
+                        <div class="settings-option">
+                            <span>Auto-save Scripts</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-option">
+                            <span>Simple UI Mode</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-category">
+                        <h3>Account</h3>
+                        <div class="settings-option" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <span>Display Name</span>
+                            <input type="text" id="setting-user-name" value="Guest" placeholder="Enter your name..." style="width: 100%;">
+                        </div>
+                        <p style="font-size: 11px; color: var(--text-dim); margin-top: 8px;">
+                            Only @GameVladY receives the Verified checkmark.
+                        </p>
+                    </div>
+                    <div class="settings-category">
+                        <h3>Credits</h3>
+                        <p style="font-size: 14px; color: var(--text-main);">Made by: <span style="color: var(--accent); font-weight: 800;">@GameVladY</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://esm.sh/three@0.149.0",
+        "three/addons/": "https://esm.sh/three@0.149.0/examples/jsm/",
+        "nipplejs": "https://esm.sh/nipplejs"
+      }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { TransformControls } from 'three/addons/controls/TransformControls.js';
+        import nipplejs from 'nipplejs';
+
+        // Initialize Three.js Scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Sky blue background
+
+        const camera = new THREE.PerspectiveCamera(75, 
+            window.innerWidth / window.innerHeight, 
+            0.1, 
+            1000
+        );
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const sceneView = document.getElementById('scene');
+        renderer.setSize(sceneView.clientWidth, sceneView.clientHeight);
+        sceneView.appendChild(renderer.domElement);
+
+        // Transform Controls
+        const transformControls = new TransformControls(camera, renderer.domElement);
+        scene.add(transformControls);
+
+        // Raycaster for clicking objects
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            const width = sceneView.clientWidth;
+            const height = sceneView.clientHeight;
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        });
+
+        // Transform Mode Switching
+        const modeTranslate = document.getElementById('mode-translate');
+        const modeRotate = document.getElementById('mode-rotate');
+        const modeScale = document.getElementById('mode-scale');
+        const modeButtons = [modeTranslate, modeRotate, modeScale];
+
+        function setTransformMode(mode, btn) {
+            transformControls.setMode(mode);
+            modeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        modeTranslate.addEventListener('click', () => setTransformMode('translate', modeTranslate));
+        modeRotate.addEventListener('click', () => setTransformMode('rotate', modeRotate));
+        modeScale.addEventListener('click', () => setTransformMode('scale', modeScale));
+
+        // Multiplayer Initialization
+        const room = new WebsimSocket();
+        let peerAvatars = {};
+
+        // Initialize World Node
+        const worldNode = { 
+            name: "World", 
+            type: "World",
+            userData: {} 
+        };
+
+        // List of objects in the scene
+        const objects = [];
+        let objectCount = 0;
+        let scriptCount = 0;
+        let scripts = {}; // To store script data
+        let currentUserName = 'Guest';
+
+        let physicsEnabled = false;
+        const gravity = -9.81; // m/s^2
+        let lastTime = performance.now();
+
+        // Function to add object to the scene and explorer
+        function addObject(object) {
+            scene.add(object);
+            objects.push(object);
+            addObjectToExplorer(object);
+        }
+
+        // Function to add object to Explorer panel
+        function addObjectToExplorer(object, parentElement = null) {
+            const container = parentElement || document.getElementById('object-list');
+            const li = document.createElement('li');
+            
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.dataset.id = objects.indexOf(object);
+
+            const expandBtn = document.createElement('div');
+            expandBtn.className = 'expand-btn hidden';
+            expandBtn.innerHTML = '▶';
+            
+            const iconSpan = document.createElement('span');
+            iconSpan.innerHTML = getObjectIcon(object.type);
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'item-name';
+            nameSpan.textContent = object.name || object.type;
+
+            const actions = document.createElement('div');
+            actions.className = 'item-actions';
+            
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'action-btn';
+            viewBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+            viewBtn.onclick = (e) => {
+                e.stopPropagation();
+                object.visible = !object.visible;
+                viewBtn.classList.toggle('active', !object.visible);
+                updatePropertiesPanel(selectedObject);
+            };
+
+            const lockBtn = document.createElement('button');
+            lockBtn.className = 'action-btn';
+            lockBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+            lockBtn.onclick = (e) => {
+                e.stopPropagation();
+                object.userData.locked = !object.userData.locked;
+                lockBtn.classList.toggle('active', object.userData.locked);
+                if (selectedObject === object && object.userData.locked) {
+                    selectObject(-1);
+                }
+            };
+
+            actions.appendChild(viewBtn);
+            actions.appendChild(lockBtn);
+
+            row.appendChild(expandBtn);
+            row.appendChild(iconSpan);
+            row.appendChild(nameSpan);
+            row.appendChild(actions);
+            li.appendChild(row);
+
+            const childrenContainer = document.createElement('div');
+            childrenContainer.className = 'children-container';
+            li.appendChild(childrenContainer);
+
+            // Expand/Collapse Logic
+            expandBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                expandBtn.classList.toggle('expanded');
+                childrenContainer.classList.toggle('visible');
+            });
+
+            // Selection Logic
+            if (object.type === 'Script') {
+                li.draggable = true;
+                row.addEventListener('dblclick', () => openScriptEditor(object));
+            } else {
+                li.draggable = false;
+                row.addEventListener('click', () => selectObject(parseInt(row.dataset.id)));
+            }
+
+            // Drag Start (Only for scripts)
+            li.addEventListener('dragstart', (e) => {
+                if (object.type !== 'Script') {
+                    e.preventDefault();
+                    return;
+                }
+                e.dataTransfer.setData('source-index', objects.indexOf(object));
+                e.stopPropagation();
+            });
+
+            // Drop Handling (Receive scripts)
+            row.addEventListener('dragover', (e) => {
+                if (object.type === 'Script') return;
+                e.preventDefault();
+                row.classList.add('drag-over');
+            });
+
+            row.addEventListener('dragleave', () => {
+                row.classList.remove('drag-over');
+            });
+
+            row.addEventListener('drop', (e) => {
+                e.preventDefault();
+                row.classList.remove('drag-over');
+                const sourceIdx = parseInt(e.dataTransfer.getData('source-index'));
+                const sourceObj = objects[sourceIdx];
+
+                if (!sourceObj || sourceObj === object) return;
+
+                // Handle Script Drag Attachment
+                if (sourceObj.type === 'Script') {
+                    if (object.type !== 'Script' && object !== baseplate) {
+                        object.userData.script = sourceObj;
+                        
+                        // Move script element in explorer to indicate it's inside
+                        if (sourceObj.explorerElement) {
+                            childrenContainer.appendChild(sourceObj.explorerElement);
+                            expandBtn.classList.remove('hidden');
+                            expandBtn.classList.add('expanded');
+                            childrenContainer.classList.add('visible');
+                        }
+                        alert(`Script "${sourceObj.name}" attached to "${object.name}"`);
+                    }
+                }
+                e.stopPropagation();
+            });
+
+            object.explorerElement = li;
+            object.explorerRow = row;
+            object.explorerExpandBtn = expandBtn;
+            object.explorerChildren = childrenContainer;
+            container.appendChild(li);
+        }
+
+        // Function to update Explorer selection
+        function updateExplorerSelection(selectedObject) {
+            objects.forEach(obj => {
+                if (obj.explorerRow) {
+                    if (obj.type === 'Script') {
+                        obj.explorerRow.classList.toggle('selected', false);
+                    } else {
+                        obj.explorerRow.classList.toggle('selected', obj === selectedObject);
+                    }
+                }
+            });
+        }
+
+        // Function to select object
+        let selectedObject = null;
+        function selectObject(id) {
+            selectedObject = objects[id];
+            if (selectedObject && selectedObject.type === 'Script') {
+                selectedObject = null;
+            }
+            
+            if (selectedObject) {
+                transformControls.attach(selectedObject);
+            } else {
+                transformControls.detach();
+            }
+
+            updateExplorerSelection(selectedObject);
+            updatePropertiesPanel(selectedObject);
+        }
+
+        // Handle Transform Controls events to update UI
+        transformControls.addEventListener('change', () => {
+            if (selectedObject) {
+                updatePropertiesPanel(selectedObject);
+            }
+        });
+
+        transformControls.addEventListener('dragging-changed', (event) => {
+            // Disable camera movement while dragging gizmo
+            cameraCanMove = !event.value;
+        });
+
+        sceneView.addEventListener('mousedown', (event) => {
+            // Prevent selection change if we're clicking on a transform gizmo handle
+            if (transformControls.axis !== null) return;
+
+            if (event.button === 0) { // Left click to select
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                
+                // Filter out baseplate and scripts and LOCKED objects
+                const selectableObjects = objects.filter(o => o.type !== 'Script' && o.name !== 'Baseplate' && !o.userData.locked);
+                const intersects = raycaster.intersectObjects(selectableObjects, true);
+
+                if (intersects.length > 0) {
+                    let clicked = intersects[0].object;
+                    // Find the top-most parent that is in our objects array
+                    while(clicked.parent && !objects.includes(clicked)) {
+                        clicked = clicked.parent;
+                    }
+                    if (objects.includes(clicked)) {
+                        selectObject(objects.indexOf(clicked));
+                    }
+                } else {
+                    // Check if we clicked the baseplate or empty space to deselect
+                    const baseplateIntersects = raycaster.intersectObject(baseplate);
+                    if (baseplateIntersects.length > 0 || intersects.length === 0) {
+                        // If we didn't hit a selectable object, check if we should deselect
+                        // Only deselect if we aren't clicking the gizmo (already checked)
+                        if (transformControls.axis === null) {
+                            selectObject(-1); 
+                        }
+                    }
+                }
+            }
+        });
+
+        // Function to update properties panel
+        function updatePropertiesPanel(object) {
+            // World Selection handling
+            if (object && object.type === 'World') {
+                document.getElementById('world-settings-section').style.display = 'block';
+                document.querySelectorAll('.section:not(#world-settings-section)').forEach(s => s.style.display = 'none');
+                return;
+            } else {
+                document.getElementById('world-settings-section').style.display = 'none';
+                document.querySelectorAll('.section:not(#world-settings-section)').forEach(s => s.style.display = 'block');
+            }
+
+            if (object && object.type !== 'Script') {
+                document.getElementById('object-name').value = object.name || '';
+                document.getElementById('object-tags').value = (object.userData.tags || []).join(', ');
+                document.getElementById('object-position').value = `${object.position.x.toFixed(2)}, ${object.position.y.toFixed(2)}, ${object.position.z.toFixed(2)}`;
+                document.getElementById('object-rotation').value = `${THREE.MathUtils.radToDeg(object.rotation.x).toFixed(2)}, ${THREE.MathUtils.radToDeg(object.rotation.y).toFixed(2)}, ${THREE.MathUtils.radToDeg(object.rotation.z).toFixed(2)}`;
+                document.getElementById('object-scale').value = `${object.scale.x.toFixed(2)}, ${object.scale.y.toFixed(2)}, ${object.scale.z.toFixed(2)}`;
+                
+                const mat = object.material;
+                if (mat && mat.color) {
+                    document.getElementById('object-color').value = `#${mat.color.getHexString()}`;
+                    document.getElementById('object-metalness').value = mat.metalness ?? 0;
+                    document.getElementById('object-roughness').value = mat.roughness ?? 0.5;
+                    document.getElementById('object-wireframe').checked = mat.wireframe ?? false;
+                    document.getElementById('object-opacity').value = mat.opacity ?? 1;
+                }
+                
+                document.getElementById('object-visible').checked = object.visible;
+                document.getElementById('object-cast-shadows').checked = object.castShadow;
+
+                // Physics
+                document.getElementById('physics-bounciness').value = object.userData.bounciness ?? 0.5;
+                document.getElementById('physics-friction').value = object.userData.friction ?? 0.1;
+                document.getElementById('physics-mass').value = object.userData.mass ?? 1;
+            } else {
+                document.getElementById('object-name').value = '';
+                document.getElementById('object-tags').value = '';
+                document.getElementById('object-position').value = '';
+                document.getElementById('object-rotation').value = '';
+                document.getElementById('object-scale').value = '';
+                document.getElementById('object-color').value = '#ffffff';
+                document.getElementById('object-visible').checked = true;
+            }
+        }
+
+        // Properties Panel Interaction
+        const nameInput = document.getElementById('object-name');
+        const positionInput = document.getElementById('object-position');
+        const rotationInput = document.getElementById('object-rotation');
+        const scaleInput = document.getElementById('object-scale');
+        const colorInput = document.getElementById('object-color');
+        const textureInput = document.getElementById('object-texture');
+        const metalnessInput = document.getElementById('object-metalness');
+        const roughnessInput = document.getElementById('object-roughness');
+        const visibleInput = document.getElementById('object-visible');
+        const wireframeInput = document.getElementById('object-wireframe');
+        const shadowInput = document.getElementById('object-cast-shadows');
+        const opacityInput = document.getElementById('object-opacity');
+
+        nameInput.addEventListener('input', (e) => {
+            if (selectedObject) {
+                selectedObject.name = e.target.value;
+                const nameSpan = selectedObject.explorerRow.querySelector('.item-name');
+                if (nameSpan) nameSpan.textContent = selectedObject.name;
+            }
+        });
+
+        positionInput.addEventListener('change', (e) => {
+            if (selectedObject) {
+                const [x, y, z] = e.target.value.split(',').map(Number);
+                selectedObject.position.set(x, y, z);
+            }
+        });
+
+        rotationInput.addEventListener('change', (e) => {
+            if (selectedObject) {
+                const [x, y, z] = e.target.value.split(',').map(Number);
+                selectedObject.rotation.set(
+                    THREE.MathUtils.degToRad(x),
+                    THREE.MathUtils.degToRad(y),
+                    THREE.MathUtils.degToRad(z)
+                );
+            }
+        });
+
+        scaleInput.addEventListener('change', (e) => {
+            if (selectedObject) {
+                const [x, y, z] = e.target.value.split(',').map(Number);
+                selectedObject.scale.set(x, y, z);
+            }
+        });
+
+        colorInput.addEventListener('input', (e) => {
+            if (selectedObject && selectedObject.material && selectedObject.material.color) {
+                selectedObject.material.color.set(e.target.value);
+            }
+        });
+
+        textureInput.addEventListener('change', (e) => {
+            if (selectedObject && selectedObject.material && e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const texture = new THREE.TextureLoader().load(event.target.result);
+                    selectedObject.material.map = texture;
+                    selectedObject.material.needsUpdate = true;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        metalnessInput.addEventListener('input', (e) => {
+            if (selectedObject && selectedObject.material) {
+                selectedObject.material.metalness = parseFloat(e.target.value);
+            }
+        });
+
+        roughnessInput.addEventListener('input', (e) => {
+            if (selectedObject && selectedObject.material) {
+                selectedObject.material.roughness = parseFloat(e.target.value);
+            }
+        });
+
+        visibleInput.addEventListener('change', (e) => {
+            if (selectedObject) {
+                selectedObject.visible = e.target.checked;
+            }
+        });
+
+        wireframeInput.addEventListener('change', (e) => {
+            if (selectedObject && selectedObject.material) {
+                selectedObject.material.wireframe = e.target.checked;
+            }
+        });
+
+        shadowInput.addEventListener('change', (e) => {
+            if (selectedObject) {
+                selectedObject.castShadow = e.target.checked;
+            }
+        });
+
+        opacityInput.addEventListener('input', (e) => {
+            if (selectedObject && selectedObject.material) {
+                selectedObject.material.transparent = parseFloat(e.target.value) < 1;
+                selectedObject.material.opacity = parseFloat(e.target.value);
+            }
+        });
+
+        // Add World to Explorer
+        addObjectToExplorer(worldNode);
+
+        // Add Baseplate
+        const planeGeometry = new THREE.PlaneGeometry(20, 20);
+        const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+        const baseplate = new THREE.Mesh(planeGeometry, planeMaterial);
+        baseplate.rotation.x = -Math.PI / 2;
+        baseplate.receiveShadow = true;
+        baseplate.name = "Baseplate";
+        baseplate.type = 'Mesh';
+        addObject(baseplate);
+
+        // Add Grid Helper
+        const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x444444);
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        // Add Cube
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshStandardMaterial({ color: 0x00ff00, wireframe: false });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.y = 1;
+        cube.castShadow = true;
+        cube.name = "Cube";
+        cube.type = 'Mesh';
+        addObject(cube);
+
+        // Add Light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 7.5);
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+
+        camera.position.set(0, 5, 10);
+        camera.rotation.order = 'YXZ'; // Essential for FPS-like rotation
+
+        // Keyboard Shortcuts & Copy/Paste Logic
+        let clipboard = null;
+
+        function copySelected() {
+            if (!selectedObject) return;
+            clipboard = selectedObject;
+        }
+
+        function pasteSelected() {
+            if (!clipboard) return;
+            
+            let clone;
+            if (clipboard.type === 'Script') {
+                clone = { 
+                    ...clipboard, 
+                    name: clipboard.name + "_Copy",
+                    explorerElement: null,
+                    explorerRow: null,
+                    explorerExpandBtn: null,
+                    explorerChildren: null
+                };
+                addScriptToExplorer(clone);
+            } else if (clipboard !== baseplate) {
+                clone = clipboard.clone();
+                clone.name = clipboard.name + "_Copy";
+                clone.position.x += 2; // Offset to avoid z-fighting
+                // Deep clone material if possible
+                if (clone.material) {
+                    clone.material = Array.isArray(clone.material) 
+                        ? clone.material.map(m => m.clone()) 
+                        : clone.material.clone();
+                }
+                // Copy script reference if any
+                if (clipboard.userData.script) {
+                    clone.userData.script = clipboard.userData.script;
+                }
+                addObject(clone);
+            }
+            
+            if (clone && clone.type !== 'Script') {
+                selectObject(objects.indexOf(clone));
+            }
+        }
+
+        function duplicateSelected() {
+            if (!selectedObject || selectedObject === baseplate) return;
+            copySelected();
+            pasteSelected();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            // Ignore if in input or textarea
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+            const isCtrl = e.ctrlKey || e.metaKey;
+            
+            if (isCtrl && e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                copySelected();
+            }
+            if (isCtrl && e.key.toLowerCase() === 'v') {
+                e.preventDefault();
+                pasteSelected();
+            }
+            if (isCtrl && e.key.toLowerCase() === 'd') {
+                e.preventDefault();
+                duplicateSelected();
+            }
+            // Delete key support
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (selectedObject && selectedObject !== baseplate) {
+                    document.getElementById('delete-object').click();
+                }
+            }
+        });
+
+        // Tools Menu & Dropdown Logic
+        const toolsButton = document.getElementById('tools-button');
+        const toolsDropdown = document.getElementById('tools-dropdown');
+
+        toolsButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toolsDropdown.classList.toggle('visible');
+        });
+
+        document.addEventListener('click', () => {
+            toolsDropdown.classList.remove('visible');
+        });
+
+        // Tools Implementation
+        document.getElementById('tool-focus').addEventListener('click', () => focusSelected());
+        document.getElementById('tool-snap').addEventListener('click', () => {
+            if (selectedObject) {
+                selectedObject.position.x = Math.round(selectedObject.position.x * 2) / 2;
+                selectedObject.position.y = Math.round(selectedObject.position.y * 2) / 2;
+                selectedObject.position.z = Math.round(selectedObject.position.z * 2) / 2;
+                updatePropertiesPanel(selectedObject);
+            }
+        });
+        document.getElementById('tool-random-rot').addEventListener('click', () => {
+            if (selectedObject) {
+                selectedObject.rotation.set(
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2
+                );
+                updatePropertiesPanel(selectedObject);
+            }
+        });
+        document.getElementById('tool-reset-transform').addEventListener('click', () => {
+            if (selectedObject) {
+                selectedObject.position.set(0, 1, 0);
+                selectedObject.rotation.set(0, 0, 0);
+                selectedObject.scale.set(1, 1, 1);
+                updatePropertiesPanel(selectedObject);
+            }
+        });
+        document.getElementById('tool-select-all').addEventListener('click', () => {
+            // Find first mesh and select it as a shortcut
+            const firstMesh = objects.find(o => o.type === 'Mesh' && o !== baseplate);
+            if (firstMesh) selectObject(objects.indexOf(firstMesh));
+        });
+        document.getElementById('tool-clear-all').addEventListener('click', () => {
+            if (confirm("Clear all objects in the scene? (Excludes baseplate)")) {
+                const toRemove = objects.filter(obj => obj !== baseplate && obj.type !== 'Script');
+                toRemove.forEach(obj => {
+                    scene.remove(obj);
+                    if (obj.explorerElement) obj.explorerElement.remove();
+                    const idx = objects.indexOf(obj);
+                    if (idx > -1) objects.splice(idx, 1);
+                });
+                selectObject(-1);
+            }
+        });
+
+        function focusSelected() {
+            if (!selectedObject) return;
+            const pos = new THREE.Vector3();
+            selectedObject.getWorldPosition(pos);
+            
+            // Animate camera position smoothly? For now just jump.
+            const offset = new THREE.Vector3(5, 5, 5);
+            camera.position.copy(pos).add(offset);
+            camera.lookAt(pos);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'f' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                focusSelected();
+            }
+        });
+
+        // Initialize Loading Screen & Room
+        async function initApp() {
+            const loaderFill = document.getElementById('loader-fill');
+            const loadingScreen = document.getElementById('loading-screen');
+            
+            // Artificial progress steps
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 20;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        loadingScreen.style.visibility = 'hidden';
+                    }, 500);
+                }
+                loaderFill.style.width = `${progress}%`;
+            }, 150);
+
+            await room.initialize();
+            initMultiplayerLogic();
+        }
+        initApp();
+
+        async function initMultiplayerLogic() {
+            const me = room.peers[room.clientId];
+            if (me) {
+                currentUserName = me.username;
+                document.getElementById('setting-user-name').value = currentUserName;
+            }
+
+            room.subscribePresence((presence) => {
+                // Handle peer visualization
+                Object.keys(presence).forEach(id => {
+                    if (id === room.clientId) return;
+                    if (!peerAvatars[id]) {
+                        const avatar = new THREE.Mesh(
+                            new THREE.CapsuleGeometry(0.3, 1),
+                            new THREE.MeshStandardMaterial({ color: 0x00a2ff })
+                        );
+                        scene.add(avatar);
+                        peerAvatars[id] = avatar;
+                    }
+                    const p = presence[id];
+                    if (p.pos) peerAvatars[id].position.set(p.pos.x, p.pos.y, p.pos.z);
+                    if (p.rot) peerAvatars[id].rotation.set(p.rot.x, p.rot.y, p.rot.z);
+                });
+                
+                // Cleanup disconnected
+                Object.keys(peerAvatars).forEach(id => {
+                    if (!presence[id]) {
+                        scene.remove(peerAvatars[id]);
+                        delete peerAvatars[id];
+                    }
+                });
+            });
+        }
+
+
+        // Camera Controls
+        const keysPressed = {};
+        let isRightMouseDown = false;
+        let cameraCanMove = true;
+        
+        window.addEventListener('keydown', (e) => {
+            keysPressed[e.key.toLowerCase()] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            keysPressed[e.key.toLowerCase()] = false;
+        });
+
+        sceneView.addEventListener('mousedown', (e) => {
+            if (e.button === 2) isRightMouseDown = true;
+        });
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 2) isRightMouseDown = false;
+        });
+        window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        sceneView.addEventListener('mousemove', (e) => {
+            if (isRightMouseDown) {
+                camera.rotation.y -= e.movementX * camSensitivity;
+                camera.rotation.x -= e.movementY * camSensitivity;
+                camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+            }
+        });
+
+        // Mobile Camera Rotation (Swipe to look)
+        let touchX = 0, touchY = 0;
+        sceneView.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchX = e.touches[0].clientX;
+                touchY = e.touches[0].clientY;
+            }
+        }, { passive: false });
+
+        sceneView.addEventListener('touchmove', (e) => {
+            // Only rotate if not touching a UI element or joystick area
+            if (e.touches.length === 1) {
+                const dx = e.touches[0].clientX - touchX;
+                const dy = e.touches[0].clientY - touchY;
+                
+                // Sensitivity boost for touch
+                camera.rotation.y -= dx * camSensitivity * 1.5;
+                camera.rotation.x -= dy * camSensitivity * 1.5;
+                camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+                
+                touchX = e.touches[0].clientX;
+                touchY = e.touches[0].clientY;
+            }
+        }, { passive: false });
+
+        let moveSpeed = 0.15;
+        let camSensitivity = 0.002;
+        let joystickVector = { x: 0, y: 0 };
+        const objectMoveSpeed = 0.1;
+
+        function moveCamera() {
+            if (!cameraCanMove) return;
+            
+            const direction = new THREE.Vector3();
+            const rotation = camera.rotation.y;
+            const currentSpeed = keysPressed['shift'] ? moveSpeed * 3 : moveSpeed;
+
+            if (keysPressed['w']) {
+                camera.position.x -= Math.sin(rotation) * currentSpeed;
+                camera.position.z -= Math.cos(rotation) * currentSpeed;
+            }
+            if (keysPressed['s']) {
+                camera.position.x += Math.sin(rotation) * currentSpeed;
+                camera.position.z += Math.cos(rotation) * currentSpeed;
+            }
+            if (keysPressed['a']) {
+                camera.position.x -= Math.cos(rotation) * currentSpeed;
+                camera.position.z += Math.sin(rotation) * currentSpeed;
+            }
+            if (keysPressed['d']) {
+                camera.position.x += Math.cos(rotation) * currentSpeed;
+                camera.position.z -= Math.sin(rotation) * currentSpeed;
+            }
+            if (keysPressed['e']) camera.position.y += currentSpeed;
+            if (keysPressed['q']) camera.position.y -= currentSpeed;
+
+            // Mobile Joystick movement
+            if (joystickVector.x !== 0 || joystickVector.y !== 0) {
+                camera.position.x += (Math.cos(rotation) * joystickVector.x - Math.sin(rotation) * joystickVector.y) * currentSpeed;
+                camera.position.z += (Math.sin(rotation) * joystickVector.x + Math.cos(rotation) * joystickVector.y) * currentSpeed;
+            }
+        }
+
+        // Object Movement Controls
+        function moveSelectedObject() {
+            if (selectedObject && selectedObject.type !== 'Script') {
+                let updated = false;
+                if (keysPressed['arrowup']) {
+                    selectedObject.position.z -= objectMoveSpeed;
+                    updated = true;
+                }
+                if (keysPressed['arrowdown']) {
+                    selectedObject.position.z += objectMoveSpeed;
+                    updated = true;
+                }
+                if (keysPressed['arrowleft']) {
+                    selectedObject.position.x -= objectMoveSpeed;
+                    updated = true;
+                }
+                if (keysPressed['arrowright']) {
+                    selectedObject.position.x += objectMoveSpeed;
+                    updated = true;
+                }
+                if (keysPressed['pageup']) {
+                    selectedObject.position.y += objectMoveSpeed;
+                    updated = true;
+                }
+                if (keysPressed['pagedown']) {
+                    selectedObject.position.y -= objectMoveSpeed;
+                    updated = true;
+                }
+                if (updated) {
+                    updatePropertiesPanel(selectedObject);
+                }
+            }
+        }
+
+        objects.forEach(obj => {
+            if (obj.type !== 'Script' && obj !== baseplate) {
+                obj.velocity = new THREE.Vector3(0, 0, 0);
+            }
+        });
+
+        let lastStatsUpdate = 0;
+        let frameCount = 0;
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            moveCamera();
+            
+            // Stats update
+            frameCount++;
+            const now = performance.now();
+            if (now - lastStatsUpdate > 1000) {
+                const fps = Math.round((frameCount * 1000) / (now - lastStatsUpdate));
+                document.getElementById('stats-panel').innerHTML = `FPS: ${fps} <br> OBJ: ${objects.length}`;
+                frameCount = 0;
+                lastStatsUpdate = now;
+            }
+
+            // Broadcast presence
+            if (room.clientId) {
+                room.updatePresence({
+                    pos: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                    rot: { x: camera.rotation.x, y: camera.rotation.y, z: camera.rotation.z }
+                });
+            }
+
+            moveSelectedObject();
+            if (physicsEnabled) {
+                const currentTime = performance.now();
+                const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+                
+                objects.forEach(obj => {
+                    // Check if object has position and is not a script or baseplate
+                    if (obj.position && obj.type !== 'Script' && obj !== baseplate) {
+                        // Initialize velocity if not exists
+                        if (!obj.velocity) {
+                            obj.velocity = new THREE.Vector3(0, 0, 0);
+                        }
+                        
+                        executeBlockScripts(obj);
+                        
+                        if (obj.useGravity) {
+                            obj.velocity.y += gravity * deltaTime;
+                            obj.position.y += obj.velocity.y * deltaTime;
+                            
+                            if (obj.position.y <= 1) {
+                                obj.position.y = 1;
+                                obj.velocity.y = 0;
+                            }
+                        }
+                    }
+                });
+                
+                lastTime = currentTime;
+            }
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Grid Snapping Logic
+        let gridSnapEnabled = false;
+        const snapToggle = document.getElementById('toggle-snap');
+        const snapLabel = document.getElementById('snap-label');
+
+        snapToggle.addEventListener('click', () => {
+            gridSnapEnabled = !gridSnapEnabled;
+            snapLabel.textContent = gridSnapEnabled ? "Snap On" : "Snap Off";
+            snapToggle.classList.toggle('active', gridSnapEnabled);
+        });
+
+        transformControls.addEventListener('change', () => {
+            if (gridSnapEnabled && selectedObject && transformControls.mode === 'translate') {
+                selectedObject.position.x = Math.round(selectedObject.position.x * 2) / 2;
+                selectedObject.position.y = Math.round(selectedObject.position.y * 2) / 2;
+                selectedObject.position.z = Math.round(selectedObject.position.z * 2) / 2;
+            }
+        });
+
+        // Additional Property Listeners
+        document.getElementById('object-tags').addEventListener('change', (e) => {
+            if (selectedObject) {
+                selectedObject.userData.tags = e.target.value.split(',').map(t => t.trim()).filter(t => t);
+            }
+        });
+
+        document.getElementById('physics-bounciness').addEventListener('input', (e) => {
+            if (selectedObject) selectedObject.userData.bounciness = parseFloat(e.target.value);
+        });
+        document.getElementById('physics-friction').addEventListener('input', (e) => {
+            if (selectedObject) selectedObject.userData.friction = parseFloat(e.target.value);
+        });
+        document.getElementById('physics-mass').addEventListener('input', (e) => {
+            if (selectedObject) selectedObject.userData.mass = parseFloat(e.target.value);
+        });
+
+        // Select the first object by default
+        selectObject(0);
+
+        // Insert Button Functionality
+        const insertButton = document.getElementById('insert-button');
+        const insertModal = document.getElementById('insert-modal');
+        const closeInsertModalButton = document.getElementById('close-insert-modal');
+        const insertCubeButton = document.getElementById('insert-cube');
+        const insertCircleButton = document.getElementById('insert-circle');
+        const insertStickmanButton = document.getElementById('insert-stickman');
+        const insertSphereButton = document.getElementById('insert-sphere');
+        const insertCylinderButton = document.getElementById('insert-cylinder');
+        const insertTorusButton = document.getElementById('insert-torus');
+        const insertConeButton = document.getElementById('insert-cone');
+        const insertPlaneButton = document.getElementById('insert-plane');
+        const insertScriptButton = document.getElementById('insert-script');
+
+        insertButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            openInsertModal();
+        });
+
+        closeInsertModalButton.addEventListener('click', () => {
+            closeInsertModal();
+        });
+
+        insertCubeButton.addEventListener('click', () => {
+            const newGeometry = new THREE.BoxGeometry();
+            const newMaterial = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff, wireframe: false });
+            const newCube = new THREE.Mesh(newGeometry, newMaterial);
+            newCube.position.set(0, 1, 0);
+            newCube.castShadow = true;
+            newCube.name = `Cube_${++objectCount}`;
+            newCube.type = 'Mesh';
+            addObject(newCube);
+            closeInsertModal();
+        });
+
+        insertCircleButton.addEventListener('click', () => {
+            const geometry = new THREE.CircleGeometry(1, 32);
+            const material = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+            const circle = new THREE.Mesh(geometry, material);
+            circle.position.set(0, 1, 0);
+            circle.rotation.x = -Math.PI / 2;
+            circle.castShadow = true;
+            circle.name = `Circle_${++objectCount}`;
+            circle.type = 'Circle';
+            addObject(circle);
+            closeInsertModal();
+        });
+
+        insertStickmanButton.addEventListener('click', () => {
+            const group = createStickman();
+            group.name = `Stickman_${++objectCount}`;
+            addObject(group);
+            closeInsertModal();
+        });
+
+        insertSphereButton.addEventListener('click', () => {
+            const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const material = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.position.set(0, 1, 0);
+            sphere.name = `Sphere_${++objectCount}`;
+            sphere.type = 'Mesh';
+            addObject(sphere);
+            closeInsertModal();
+        });
+
+        insertCylinderButton.addEventListener('click', () => {
+            const geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+            const material = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+            const cylinder = new THREE.Mesh(geometry, material);
+            cylinder.position.set(0, 1, 0);
+            cylinder.name = `Cylinder_${++objectCount}`;
+            cylinder.type = 'Mesh';
+            addObject(cylinder);
+            closeInsertModal();
+        });
+
+        insertTorusButton.addEventListener('click', () => {
+            const geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
+            const material = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+            const torus = new THREE.Mesh(geometry, material);
+            torus.position.set(0, 1, 0);
+            torus.name = `Torus_${++objectCount}`;
+            torus.type = 'Mesh';
+            addObject(torus);
+            closeInsertModal();
+        });
+
+        insertConeButton.addEventListener('click', () => {
+            const geometry = new THREE.ConeGeometry(0.5, 1, 32);
+            const material = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+            const cone = new THREE.Mesh(geometry, material);
+            cone.position.set(0, 1, 0);
+            cone.name = `Cone_${++objectCount}`;
+            cone.type = 'Mesh';
+            addObject(cone);
+            closeInsertModal();
+        });
+
+        insertPlaneButton.addEventListener('click', () => {
+            const geometry = new THREE.PlaneGeometry(1, 1);
+            const material = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff, side: THREE.DoubleSide });
+            const plane = new THREE.Mesh(geometry, material);
+            plane.position.set(0, 1, 0);
+            plane.rotation.x = -Math.PI / 2;
+            plane.name = `Plane_${++objectCount}`;
+            plane.type = 'Mesh';
+            addObject(plane);
+            closeInsertModal();
+        });
+
+        insertScriptButton.addEventListener('click', () => {
+            const script = {
+                type: 'Script',
+                name: `Script_${++scriptCount}`,
+                code: '-- Lua script here...'
+            };
+            scripts[script.name] = script;
+            addScriptToExplorer(script);
+            closeInsertModal();
+        });
+
+        function addScriptToExplorer(script) {
+            objects.push(script);
+            addObjectToExplorer(script);
+        }
+
+        function openInsertModal() {
+            insertModal.style.display = 'flex';
+        }
+
+        function closeInsertModal() {
+            insertModal.style.display = 'none';
+        }
+
+        // File Modal Functionality
+        const fileButton = document.getElementById('file-button');
+        const fileModal = document.getElementById('file-modal');
+        const closeFileModalButton = document.getElementById('close-file-modal');
+        const importObjInput = document.getElementById('import-obj');
+        const importGlbInput = document.getElementById('import-glb');
+        const exportButton = document.getElementById('export-button');
+        const exportHtmlButton = document.getElementById('export-html-button');
+        const leaveStudioButton = document.getElementById('leave-studio-button');
+
+        fileButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            openFileModal();
+        });
+
+        closeFileModalButton.addEventListener('click', () => {
+            closeFileModal();
+        });
+
+        importObjInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const contents = event.target.result;
+                    const loader = new OBJLoader();
+                    const url = URL.createObjectURL(new Blob([contents]));
+                    loader.load(url, function (obj) {
+                        obj.traverse(function(child) {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+                        obj.name = file.name;
+                        obj.position.set(0, 1, 0);
+                        obj.type = 'Mesh';
+                        addObject(obj);
+                        URL.revokeObjectURL(url);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+            e.target.value = '';
+            closeFileModal();
+        });
+
+        importGlbInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const contents = event.target.result;
+                    const loader = new GLTFLoader();
+                    loader.parse(contents, '', (gltf) => {
+                        const obj = gltf.scene;
+                        obj.traverse(function(child) {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+                        obj.name = file.name;
+                        obj.position.set(0, 1, 0);
+                        obj.type = 'Mesh';
+                        addObject(obj);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+            e.target.value = '';
+            closeFileModal();
+        });
+
+        exportButton.addEventListener('click', () => {
+            const sceneData = {
+                objects: objects.filter(obj => obj.type !== 'Script').map(obj => ({
+                    type: obj.type,
+                    name: obj.name,
+                    position: obj.position,
+                    rotation: obj.rotation,
+                    scale: obj.scale,
+                    color: obj.material ? obj.material.color.getHex() : (obj.children?.[0]?.material?.color?.getHex() || null)
+                }))
+            };
+            
+            const blob = new Blob([JSON.stringify(sceneData)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'game-export.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Game exported successfully!');
+        });
+
+        exportHtmlButton.addEventListener('click', () => {
+            const sceneData = objects.filter(obj => obj.type !== 'Script').map(obj => {
+                let scriptData = null;
+                if (obj.userData.script) {
+                    const s = obj.userData.script;
+                    scriptData = {
+                        code: s.codeConfig || null,
+                        blocks: s.workspace ? Array.from(s.workspace.querySelectorAll('.block')).map(b => ({
+                            type: b.dataset.type,
+                            value: b.querySelector('.block-value').value
+                        })) : []
+                    };
+                }
+
+                return {
+                    type: obj.type,
+                    name: obj.name,
+                    position: {x: obj.position.x, y: obj.position.y, z: obj.position.z},
+                    rotation: {x: obj.rotation.x, y: obj.rotation.y, z: obj.rotation.z},
+                    scale: {x: obj.scale.x, y: obj.scale.y, z: obj.scale.z},
+                    color: obj.material ? obj.material.color.getHex() : (obj.children?.[0]?.material?.color?.getHex() || 0xcccccc),
+                    script: scriptData,
+                    geometryType: obj.geometry?.type || 'BoxGeometry',
+                    userData: { ...obj.userData, script: null } // avoid circular
+                };
+            });
+
+            // Use Base64 to safely inject JSON data and avoid script-tag parsing issues
+            const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(sceneData))));
+
+            const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Exported Game - WebStudio</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        #splash { position: fixed; inset: 0; background: #111; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; transition: opacity 1s; }
+        #splash.fade-out { opacity: 0; pointer-events: none; }
+        #controls-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.5); color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="splash">
+        <h1 style="letter-spacing: 4px; color: #00a2ff;">WEBSTUDIO</h1>
+        <p style="font-size: 12px; color: #888;">LOADING WORLD...</p>
+    </div>
+    <div id="controls-hint">WASD to Move | SPACE to Jump</div>
+    <script type="importmap">
+    { "imports": { "three": "https://esm.sh/three@0.149.0" } }
+    ${'<'}/script>
+    <script type="module">
+        import * as THREE from "three";
+        const sceneData = JSON.parse(decodeURIComponent(escape(atob("${encodedData}"))));
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+        
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+        sun.position.set(5, 10, 7.5);
+        sun.castShadow = true;
+        scene.add(sun);
+
+        const keys = {};
+        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+        const objects = [];
+        sceneData.forEach(data => {
+            let mesh;
+            if (data.type === "Stickman") {
+                mesh = new THREE.Group();
+                const h = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshStandardMaterial({color: data.color}));
+                h.position.y = 1;
+                const b = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1), new THREE.MeshStandardMaterial({color: data.color}));
+                mesh.add(h, b);
+            } else {
+                let geo;
+                switch(data.geometryType) {
+                    case 'CircleGeometry': geo = new THREE.CircleGeometry(1, 32); break;
+                    case 'SphereGeometry': geo = new THREE.SphereGeometry(0.5, 32, 32); break;
+                    case 'CylinderGeometry': geo = new THREE.CylinderGeometry(0.5, 0.5, 1, 32); break;
+                    case 'TorusGeometry': geo = new THREE.TorusGeometry(0.5, 0.2, 16, 100); break;
+                    case 'ConeGeometry': geo = new THREE.ConeGeometry(0.5, 1, 32); break;
+                    case 'PlaneGeometry': geo = new THREE.PlaneGeometry(1, 1); break;
+                    default: geo = new THREE.BoxGeometry(); break;
+                }
+                mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color: data.color, side: THREE.DoubleSide}));
+            }
+            mesh.position.set(data.position.x, data.position.y, data.position.z);
+            mesh.rotation.set(data.rotation.x, data.rotation.y, data.rotation.z);
+            mesh.scale.set(data.scale.x, data.scale.y, data.scale.z);
+            mesh.userData = data.userData || {};
+            mesh.userData.runtimeScript = data.script;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.velocity = new THREE.Vector3(0,0,0);
+            scene.add(mesh);
+            objects.push(mesh);
+        });
+
+        camera.position.set(0, 5, 10);
+        camera.lookAt(0,0,0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = 1/60;
+            
+            objects.forEach(obj => {
+                const s = obj.userData.runtimeScript;
+                if (!s) return;
+                
+                // Blocks execution
+                if (s.blocks) {
+                    s.blocks.forEach(b => {
+                        const val = b.value;
+                        if (b.type === 'gravity' && val === 'true') {
+                            obj.velocity.y -= 9.8 * dt;
+                            obj.position.y += obj.velocity.y * dt;
+                            if (obj.position.y < 0.5) { obj.position.y = 0.5; obj.velocity.y = 0; }
+                        }
+                        if (b.type === 'spin') obj.rotation.y += parseFloat(val) * 0.02;
+                        if (b.type === 'player' && val === 'true') {
+                            if (keys['w']) obj.position.z -= 0.1;
+                            if (keys['s']) obj.position.z += 0.1;
+                            if (keys['a']) obj.position.x -= 0.1;
+                            if (keys['d']) obj.position.x += 0.1;
+                            if (keys[' '] && obj.position.y <= 0.51) obj.velocity.y = 5;
+                        }
+                    });
+                }
+                // Code execution (basic)
+                if (s.code) {
+                    if (s.code.gravity) {
+                        obj.velocity.y -= 9.8 * dt;
+                        obj.position.y += obj.velocity.y * dt;
+                        if (obj.position.y < 0.5) { obj.position.y = 0.5; obj.velocity.y = 0; }
+                    }
+                    if (s.code.spin) obj.rotation.y += s.code.spin * 0.02;
+                    if (s.code.player) {
+                        if (keys['w']) obj.position.z -= 0.1;
+                        if (keys['s']) obj.position.z += 0.1;
+                        if (keys['a']) obj.position.x -= 0.1;
+                        if (keys['d']) obj.position.x += 0.1;
+                        if (keys[' '] && obj.position.y <= 0.51) obj.velocity.y = 5;
+                    }
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        setTimeout(() => { document.getElementById("splash").classList.add("fade-out"); }, 2000);
+        window.addEventListener("resize", () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    <\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'webstudio-game.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('HTML Project exported successfully!');
+        });
+
+        leaveStudioButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to leave the studio? Unsaved changes will be lost.')) {
+                window.location.reload();
+            }
+        });
+
+        function openFileModal() {
+            fileModal.style.display = 'flex';
+        }
+
+        function closeFileModal() {
+            fileModal.style.display = 'none';
+        }
+
+        // Click outside modal to close
+        window.addEventListener('click', (event) => {
+            if (event.target === insertModal) {
+                closeInsertModal();
+            }
+            if (event.target === fileModal) {
+                closeFileModal();
+            }
+            if (event.target === scriptEditorModal) {
+                closeScriptEditor();
+            }
+
+            if (event.target === settingsModal) {
+                closeSettingsModal();
+            }
+        });
+
+        // Script Editor Functionality
+        const scriptEditorModal = document.getElementById('script-editor-modal');
+        const closeScriptEditorButton = document.getElementById('close-script-editor');
+        const blocksWorkspace = document.getElementById('blocks-workspace');
+        const saveScriptButton = document.getElementById('save-script');
+        let currentScript = null;
+        let currentEditorView = 'blocks';
+
+        function openScriptEditor(script) {
+            currentScript = script;
+            scriptEditorModal.style.display = 'flex';
+            initializeBlocksDragDrop();
+        }
+
+        function closeScriptEditor() {
+            scriptEditorModal.style.display = 'none';
+            currentScript = null;
+        }
+
+        closeScriptEditorButton.addEventListener('click', () => {
+            closeScriptEditor();
+        });
+
+        // Initialize drag and drop for blocks
+        function initializeBlocksDragDrop() {
+            const workspace = blocksWorkspace;
+            const palette = document.querySelector('.blocks-palette');
+
+            // Prevent redundant listeners
+            if (palette.dataset.dragInitialized) return;
+            palette.dataset.dragInitialized = "true";
+
+            palette.addEventListener('dragstart', (e) => {
+                const block = e.target.closest('.block');
+                if (block) {
+                    // We transfer the type and inner content separately to avoid weird DOM nesting
+                    e.dataTransfer.setData('block-type', block.dataset.type);
+                    e.dataTransfer.setData('block-html', block.innerHTML);
+                    e.dataTransfer.setData('block-color', block.style.background || '');
+                }
+            });
+
+            workspace.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+
+            workspace.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const type = e.dataTransfer.getData('block-type');
+                const html = e.dataTransfer.getData('block-html');
+                const color = e.dataTransfer.getData('block-color');
+                
+                if (type && html) {
+                    const newBlock = document.createElement('div');
+                    newBlock.className = 'block';
+                    newBlock.dataset.type = type;
+                    newBlock.draggable = true;
+                    newBlock.innerHTML = html;
+                    if (color) newBlock.style.background = color;
+                    
+                    // Simple removal logic: click to remove from workspace?
+                    // For now just appending.
+                    workspace.appendChild(newBlock);
+                }
+            });
+        }
+
+        saveScriptButton.addEventListener('click', () => {
+            if (currentScript) {
+                if (currentEditorView === 'blocks') {
+                    const workspace = blocksWorkspace.cloneNode(true);
+                    currentScript.workspace = workspace;
+                } else {
+                    const codeEditor = document.getElementById('code-editor');
+                    currentScript.codeConfig = parseCodeEditor(codeEditor.value);
+                }
+                alert('Script saved!');
+            }
+        });
+
+
+
+        // Execute block scripts
+        function executeBlockScripts(object) {
+            if (object.userData.script) {
+                const script = object.userData.script;
+                
+                if (currentEditorView === 'code' && script.codeConfig) {
+                    // Execute code editor configuration
+                    object.useGravity = script.codeConfig.gravity || false;
+                    if (script.codeConfig.spin) {
+                        object.rotation.y += script.codeConfig.spin * 0.01;
+                    }
+                    object.isPlayer = script.codeConfig.player || false;
+                    
+                    if (object.isPlayer) {
+                        if (keysPressed['a']) object.position.x -= 0.1;
+                        if (keysPressed['d']) object.position.x += 0.1;
+                        if (keysPressed['w']) object.position.z -= 0.1;
+                        if (keysPressed['s']) object.position.z += 0.1;
+                        if (keysPressed[' '] && object.position.y <= 1) {
+                            object.velocity.y = 5;
+                        }
+                    }
+                } else {
+                    // Existing blocks execution code remains the same
+                    const workspace = script.workspace;
+                    if (workspace) {
+                        const blocks = workspace.querySelectorAll('.block');
+                        blocks.forEach(block => {
+                            const type = block.dataset.type;
+                            const value = block.querySelector('.block-value').value;
+                            
+                            switch(type) {
+                                case 'gravity':
+                                    object.useGravity = value === 'true';
+                                    break;
+                                case 'spin':
+                                    const spinSpeed = parseFloat(value);
+                                    object.rotation.y += spinSpeed * 0.01;
+                                    break;
+                                case 'player':
+                                    object.isPlayer = value === 'true';
+                                    if (object.isPlayer) {
+                                        // Player movement controls
+                                        if (keysPressed['a']) {
+                                            object.position.x -= 0.1;
+                                        }
+                                        if (keysPressed['d']) {
+                                            object.position.x += 0.1;
+                                        }
+                                        if (keysPressed['w']) {
+                                            object.position.z -= 0.1;
+                                        }
+                                        if (keysPressed['s']) {
+                                            object.position.z += 0.1;
+                                        }
+                                        if (keysPressed[' '] && object.position.y <= 1) {
+                                            object.velocity.y = object.jumpPower || 5;
+                                        }
+                                    }
+                                    break;
+                                case 'moveX':
+                                    object.position.x += parseFloat(value);
+                                    break;
+                                case 'moveY':
+                                    object.position.y += parseFloat(value);
+                                    break;
+                                case 'moveZ':
+                                    object.position.z += parseFloat(value);
+                                    break;
+                                case 'size':
+                                    const s = parseFloat(value);
+                                    object.scale.set(s, s, s);
+                                    break;
+                                case 'jumpPower':
+                                    object.jumpPower = parseFloat(value);
+                                    break;
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        function parseCodeEditor(code) {
+            const lines = code.split('\n');
+            const config = {};
+            
+            lines.forEach(line => {
+                const [key, value] = line.split(':').map(s => s.trim());
+                if (key && value) {
+                    if (value === 'true' || value === 'false') {
+                        config[key] = value === 'true';
+                    } else if (!isNaN(value)) {
+                        config[key] = parseFloat(value);
+                    } else {
+                        config[key] = value;
+                    }
+                }
+            });
+            
+            return config;
+        }
+
+        // World Settings Logic
+        const worldSkyColorInput = document.getElementById('world-sky-color');
+        const worldAmbientIntensityInput = document.getElementById('world-ambient-intensity');
+        const worldSunIntensityInput = document.getElementById('world-sun-intensity');
+        const worldFogEnabledInput = document.getElementById('world-fog-enabled');
+
+        worldSkyColorInput.addEventListener('input', (e) => {
+            scene.background.set(e.target.value);
+        });
+        worldAmbientIntensityInput.addEventListener('input', (e) => {
+            ambientLight.intensity = parseFloat(e.target.value);
+        });
+        worldSunIntensityInput.addEventListener('input', (e) => {
+            directionalLight.intensity = parseFloat(e.target.value);
+        });
+        worldFogEnabledInput.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                scene.fog = new THREE.Fog(scene.background, 1, 50);
+            } else {
+                scene.fog = null;
+            }
+        });
+
+        function getObjectIcon(type) {
+            switch(type) {
+                case 'Script':
+                    return '<svg class="script-icon" viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>';
+                case 'Mesh':
+                    return '<svg class="cube-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>';
+                case 'Circle':
+                    return '<svg class="circle-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
+                case 'Stickman':
+                    return '<svg class="stickman-icon" viewBox="0 0 24 24"><path d="M12 7a2 2 0 100-4 2 2 0 000 4zM12 7v7m0 0l-4 5m4-5l4 5m-4-10H8m4 0h4"/></svg>';
+                case 'World':
+                    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00a2ff" stroke-width="2"><path d="M12 2v2l3 3-3 3v2M5 20v-2l-3-3 3-3v-2"/></svg>';
+                default:
+                    return '<svg class="baseplate-icon" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+            }
+        }
+
+        const playButton = document.getElementById('play-button');
+        playButton.addEventListener('click', () => {
+            physicsEnabled = !physicsEnabled;
+            playButton.classList.toggle('active');
+            
+            // Reset time when starting physics
+            if (physicsEnabled) {
+                lastTime = performance.now();
+                // Change play button icon to stop
+                playButton.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 6h12v12H6z"/>
+                    </svg>
+                    <span>Stop</span>
+                `;
+            } else {
+                // Change back to play icon
+                playButton.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <span>Play</span>
+                `;
+                
+                // Reset object velocities
+                objects.forEach(obj => {
+                    if (obj.position && obj.type !== 'Script' && obj !== baseplate) {
+                        if (!obj.velocity) {
+                            obj.velocity = new THREE.Vector3(0, 0, 0);
+                        } else {
+                            obj.velocity.set(0, 0, 0);
+                        }
+                    }
+                });
+            }
+        });
+        
+        const deleteButton = document.getElementById('delete-object');
+        const deleteAllBlocksButton = document.getElementById('delete-all-blocks');
+
+        deleteButton.addEventListener('click', () => {
+            if (selectedObject) {
+                transformControls.detach();
+                if (selectedObject.type === 'Script') {
+                    // Remove script from objects array
+                    const index = objects.indexOf(selectedObject);
+                    if (index > -1) {
+                        objects.splice(index, 1);
+                    }
+                    // Remove from DOM
+                    selectedObject.explorerElement.remove();
+                    // Remove from scripts object
+                    delete scripts[selectedObject.name];
+                } else {
+                    // Remove from scene
+                    scene.remove(selectedObject);
+                    // Remove from objects array
+                    const index = objects.indexOf(selectedObject);
+                    if (index > -1) {
+                        objects.splice(index, 1);
+                    }
+                    // Remove from DOM
+                    selectedObject.explorerElement.remove();
+                }
+                selectedObject = null;
+                updatePropertiesPanel(null);
+            }
+        });
+
+        deleteAllBlocksButton.addEventListener('click', () => {
+            if (currentScript) {
+                const workspace = document.getElementById('blocks-workspace');
+                workspace.innerHTML = '';
+                currentScript.workspace = workspace.cloneNode(true);
+            }
+        });
+        
+        // Add event listeners for editor tabs
+        document.getElementById('blocks-tab').addEventListener('click', () => {
+            currentEditorView = 'blocks';
+            document.getElementById('blocks-view').style.display = 'block';
+            document.getElementById('code-view').style.display = 'none';
+            document.getElementById('blocks-tab').classList.add('active');
+            document.getElementById('code-tab').classList.remove('active');
+        });
+
+        document.getElementById('code-tab').addEventListener('click', () => {
+            currentEditorView = 'code';
+            document.getElementById('blocks-view').style.display = 'none';
+            document.getElementById('code-view').style.display = 'block';
+            document.getElementById('blocks-tab').classList.remove('active');
+            document.getElementById('code-tab').classList.add('active');
+        });
+
+        // Removed broken ANSI-based syntax highlighting for textarea
+        document.getElementById('code-editor').addEventListener('input', () => {
+            // Future: Implement a proper overlaid code editor for syntax highlighting
+        });
+
+        // Explorer Search Functionality
+        const explorerSearchInput = document.getElementById('explorer-search');
+        explorerSearchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            objects.forEach(obj => {
+                if (obj.explorerElement) {
+                    const name = (obj.name || obj.type).toLowerCase();
+                    // We hide the entire LI (including children if matched) or just parents
+                    obj.explorerElement.style.display = name.includes(query) ? 'flex' : 'none';
+                }
+            });
+        });
+
+        // Settings Modal Functionality
+        const settingsButton = document.getElementById('settings-button');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsModalButton = document.getElementById('close-settings-modal');
+
+        settingsButton.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+
+        closeSettingsModalButton.addEventListener('click', () => {
+            closeSettingsModal();
+        });
+
+        function closeSettingsModal() {
+            settingsModal.style.display = 'none';
+        }
+
+        // Setting Logic Implementations
+        document.getElementById('setting-show-grid').addEventListener('change', (e) => {
+            gridHelper.visible = e.target.checked;
+        });
+
+        document.getElementById('setting-show-sky').addEventListener('change', (e) => {
+            scene.background = e.target.checked ? new THREE.Color(0x87CEEB) : new THREE.Color(0x000000);
+        });
+
+        document.getElementById('setting-grid-color').addEventListener('change', (e) => {
+            scene.remove(gridHelper);
+            const color = new THREE.Color(e.target.value);
+            const newGrid = new THREE.GridHelper(20, 20, color, color);
+            newGrid.position.y = 0.01;
+            newGrid.visible = document.getElementById('setting-show-grid').checked;
+            scene.add(newGrid);
+            // Re-assign globally
+            window.gridHelper = newGrid; 
+        });
+        // Make sure it's accessible globally for the listener
+        window.gridHelper = gridHelper;
+
+        document.getElementById('setting-cam-sensitivity').addEventListener('input', (e) => {
+            camSensitivity = parseFloat(e.target.value);
+        });
+
+        document.getElementById('setting-move-speed').addEventListener('input', (e) => {
+            moveSpeed = parseFloat(e.target.value);
+        });
+
+        document.getElementById('setting-user-name').addEventListener('input', (e) => {
+            currentUserName = e.target.value.trim() || 'Guest';
+        });
+
+        // Mobile Panel Toggles
+        const mobToggleExplorer = document.getElementById('mob-toggle-explorer');
+        const mobToggleScene = document.getElementById('mob-toggle-scene');
+        const mobToggleProperties = document.getElementById('mob-toggle-properties');
+        const explorerPanel = document.querySelector('.explorer');
+        const propertiesPanel = document.querySelector('.properties');
+        const mobStudioBtns = [mobToggleExplorer, mobToggleScene, mobToggleProperties];
+
+        function setMobileStudioView(view) {
+            explorerPanel.classList.toggle('mobile-visible', view === 'explorer');
+            propertiesPanel.classList.toggle('mobile-visible', view === 'properties');
+            mobStudioBtns.forEach(btn => btn.classList.remove('active'));
+            if (view === 'explorer') mobToggleExplorer.classList.add('active');
+            if (view === 'scene') mobToggleScene.classList.add('active');
+            if (view === 'properties') mobToggleProperties.classList.add('active');
+        }
+
+        mobToggleExplorer.addEventListener('click', () => setMobileStudioView('explorer'));
+        mobToggleScene.addEventListener('click', () => setMobileStudioView('scene'));
+        mobToggleProperties.addEventListener('click', () => setMobileStudioView('properties'));
+
+        // Mobile Welcome Nav
+        const mobCreate = document.getElementById('mob-create');
+        const mobTemplates = document.getElementById('mob-templates');
+        const mobSettings = document.getElementById('mob-settings');
+        const mobNavItems = [mobCreate, mobTemplates, mobSettings];
+
+        mobCreate.addEventListener('click', startProject);
+        mobTemplates.addEventListener('click', () => {
+            mobNavItems.forEach(i => i.classList.remove('active'));
+            mobTemplates.classList.add('active');
+            sidebarTemplates.click();
+        });
+        mobSettings.addEventListener('click', () => {
+            mobNavItems.forEach(i => i.classList.remove('active'));
+            mobSettings.classList.add('active');
+            sidebarSettings.click();
+        });
+
+        // Initialize Joystick for mobile
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            const joystick = nipplejs.create({
+                zone: document.getElementById('joystick-container'),
+                mode: 'static',
+                position: { left: '70px', bottom: '100px' },
+                color: 'white',
+                size: 100
+            });
+
+            joystick.on('move', (evt, data) => {
+                const forward = data.vector.y;
+                const right = data.vector.x;
+                joystickVector.x = right;
+                joystickVector.y = -forward;
+            });
+
+            joystick.on('end', () => {
+                joystickVector.x = 0;
+                joystickVector.y = 0;
+            });
+            
+            // Adjust camera sensitivity for touch
+            camSensitivity = 0.005;
+            
+            // Force joystick container visibility on mobile
+            document.getElementById('joystick-container').style.display = 'block';
+        }
+
+        document.getElementById('setting-shadows').addEventListener('change', (e) => {
+            renderer.shadowMap.enabled = e.target.checked;
+            objects.forEach(obj => {
+                if (obj.material) obj.material.needsUpdate = true;
+            });
+        });
+
+        // Welcome Menu Logic (Moved into module for scope access)
+        const welcomeMenu = document.getElementById('welcome-menu');
+        const sidebarCreate = document.getElementById('sidebar-create');
+        const sidebarTemplates = document.getElementById('sidebar-templates');
+        const sidebarSettings = document.getElementById('sidebar-settings');
+        
+        const sectionTemplates = document.getElementById('section-templates');
+        const sectionSettings = document.getElementById('section-settings');
+
+        const cubeTemplate = document.getElementById('cube-template');
+        const circleTemplate = document.getElementById('circle-template');
+        const stickmanTemplate = document.getElementById('stickman-template');
+        const physicsTemplate = document.getElementById('physics-template');
+        const museumTemplate = document.getElementById('museum-template');
+        const forestTemplate = document.getElementById('forest-template');
+        const cityTemplate = document.getElementById('city-template');
+        const sciFiTemplate = document.getElementById('sci-fi-template');
+        const dungeonTemplate = document.getElementById('dungeon-template');
+        const carTemplate = document.getElementById('car-template');
+        const lavaTemplate = document.getElementById('lava-template');
+        const moonTemplate = document.getElementById('moon-template');
+        const zenTemplate = document.getElementById('zen-template');
+        const obbyTemplate = document.getElementById('obby-template');
+        const trafficTemplate = document.getElementById('traffic-template');
+        
+        const textureFileInput = document.getElementById('object-texture');
+
+        if (textureFileInput) {
+            const fileLabel = textureFileInput.nextElementSibling;
+            if (fileLabel) {
+                textureFileInput.addEventListener('change', function(e) {
+                    if(this.files && this.files[0]) {
+                        fileLabel.textContent = this.files[0].name;
+                    } else {
+                        fileLabel.textContent = 'Choose File';
+                    }
+                });
+            }
+        }
+
+        function startProject() {
+            welcomeMenu.classList.add('hide');
+            const main = document.querySelector('.main');
+            main.style.animation = 'none';
+            main.offsetHeight; // trigger reflow
+            main.style.animation = 'fadeIn 1.2s cubic-bezier(0.23, 1, 0.32, 1)';
+        }
+
+        sidebarCreate.addEventListener('click', startProject);
+        
+        sidebarTemplates.addEventListener('click', () => {
+            sidebarNavItems.forEach(i => i.classList.remove('active'));
+            sidebarTemplates.classList.add('active');
+            sectionTemplates.classList.add('active');
+            sectionSettings.classList.remove('active');
+        });
+
+        sidebarSettings.addEventListener('click', () => {
+            sidebarNavItems.forEach(i => i.classList.remove('active'));
+            sidebarSettings.classList.add('active');
+            sectionTemplates.classList.remove('active');
+            sectionSettings.classList.add('active');
+        });
+
+        const sidebarNavItems = [sidebarTemplates, sidebarSettings];
+
+        cubeTemplate.addEventListener('click', () => {
+            startProject();
+            const cube = createCube();
+            addObject(cube);
+        });
+
+        circleTemplate.addEventListener('click', () => {
+            startProject();
+            const circle = createCircle();
+            addObject(circle);
+        });
+
+        stickmanTemplate.addEventListener('click', () => {
+            startProject();
+            const stickman = createStickman();
+            addObject(stickman);
+        });
+
+        physicsTemplate.addEventListener('click', () => {
+            startProject();
+            for(let i=0; i<5; i++) {
+                const c = createCube();
+                c.position.set(Math.random()*4-2, 5 + i*2, Math.random()*4-2);
+                c.useGravity = true;
+                addObject(c);
+            }
+        });
+
+        museumTemplate.addEventListener('click', () => {
+            startProject();
+            const floor = createCircle();
+            floor.scale.set(5, 5, 5);
+            floor.position.y = 0.05;
+            addObject(floor);
+            
+            const stand = createCube();
+            stand.scale.set(1, 2, 1);
+            stand.position.y = 1;
+            addObject(stand);
+            
+            const head = createStickman();
+            head.position.set(0, 2, 0);
+            addObject(head);
+        });
+
+        forestTemplate.addEventListener('click', () => {
+            startProject();
+            for(let i=0; i<10; i++) {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2), new THREE.MeshStandardMaterial({color: 0x5d4037}));
+                const foliage = new THREE.Mesh(new THREE.SphereGeometry(0.8), new THREE.MeshStandardMaterial({color: 0x2e7d32}));
+                const tree = new THREE.Group();
+                tree.add(trunk, foliage);
+                foliage.position.y = 1.2;
+                tree.position.set(Math.random()*16-8, 1, Math.random()*16-8);
+                tree.name = `Tree_${i}`;
+                tree.type = "Mesh";
+                addObject(tree);
+            }
+        });
+
+        cityTemplate.addEventListener('click', () => {
+            startProject();
+            for(let i=0; i<8; i++) {
+                const building = createCube();
+                const h = 3 + Math.random()*7;
+                building.scale.set(2, h, 2);
+                building.position.set(Math.random()*16-8, h/2, Math.random()*16-8);
+                building.material.color.set(0x444444);
+                building.name = `Building_${i}`;
+                addObject(building);
+            }
+        });
+
+        sciFiTemplate.addEventListener('click', () => {
+            startProject();
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(3, 0.1, 16, 100), new THREE.MeshStandardMaterial({color: 0x00ffff}));
+            ring.rotation.x = Math.PI/2;
+            ring.position.y = 0.1;
+            ring.name = "EnergyRing";
+            ring.type = "Mesh";
+            addObject(ring);
+            
+            const core = new THREE.Mesh(new THREE.SphereGeometry(1), new THREE.MeshStandardMaterial({color: 0x00a2ff, emissive: 0x00a2ff}));
+            core.position.y = 2;
+            core.name = "ReactorCore";
+            core.type = "Mesh";
+            addObject(core);
+        });
+
+        dungeonTemplate.addEventListener('click', () => {
+            startProject();
+            baseplate.material.color.set(0x222222);
+            for(let i=0; i<4; i++) {
+                const wall = createCube();
+                wall.scale.set(10, 4, 1);
+                wall.position.set(i%2==0 ? 0 : (i==1?5:-5), 2, i%2!=0 ? 0 : (i==0?5:-5));
+                if(i%2!=0) wall.rotation.y = Math.PI/2;
+                wall.material.color.set(0x333333);
+                wall.name = `Wall_${i}`;
+                addObject(wall);
+            }
+        });
+
+        carTemplate.addEventListener('click', () => {
+            startProject();
+            const body = createCube();
+            body.scale.set(2, 0.5, 4);
+            body.position.y = 0.75;
+            body.name = "CarBody";
+            addObject(body);
+            
+            const cabin = createCube();
+            cabin.scale.set(1.5, 0.7, 2);
+            cabin.position.y = 1.35;
+            cabin.name = "CarCabin";
+            addObject(cabin);
+            
+            for(let i=0; i<4; i++) {
+                const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3), new THREE.MeshStandardMaterial({color: 0x111111}));
+                wheel.rotation.z = Math.PI/2;
+                wheel.position.set(i%2==0 ? 1 : -1, 0.4, i<2 ? 1.5 : -1.5);
+                wheel.name = `Wheel_${i}`;
+                wheel.type = "Mesh";
+                addObject(wheel);
+            }
+        });
+
+        lavaTemplate.addEventListener('click', () => {
+            startProject();
+            baseplate.material.color.set(0x221100);
+            scene.background = new THREE.Color(0x330000);
+            for(let i=0; i<15; i++) {
+                const lavaPillar = createCube();
+                lavaPillar.material.color.set(0xff4400);
+                lavaPillar.material.emissive.set(0x331100);
+                lavaPillar.scale.set(1.5, Math.random()*4, 1.5);
+                lavaPillar.position.set(Math.random()*16-8, lavaPillar.scale.y/2, Math.random()*16-8);
+                addObject(lavaPillar);
+            }
+        });
+
+        moonTemplate.addEventListener('click', () => {
+            startProject();
+            scene.background = new THREE.Color(0x050505);
+            baseplate.material.color.set(0x888888);
+            for(let i=0; i<10; i++) {
+                const crater = createCircle();
+                crater.material.color.set(0x666666);
+                crater.scale.set(Math.random()*2+1, Math.random()*2+1, 1);
+                crater.position.set(Math.random()*16-8, 0.05, Math.random()*16-8);
+                addObject(crater);
+            }
+        });
+
+        zenTemplate.addEventListener('click', () => {
+            startProject();
+            baseplate.material.color.set(0xe0e0d0);
+            for(let i=0; i<5; i++) {
+                const rock = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({color: 0x777777}));
+                rock.scale.set(1, 0.6, 1.2);
+                rock.position.set(Math.random()*10-5, 0.3, Math.random()*10-5);
+                rock.name = "ZenRock";
+                addObject(rock);
+            }
+        });
+
+        obbyTemplate.addEventListener('click', () => {
+            startProject();
+            for(let i=0; i<10; i++) {
+                const platform = createCube();
+                platform.scale.set(2, 0.2, 2);
+                platform.position.set(0, i*1.5, i*-3);
+                platform.material.color.setHSL(i/10, 0.8, 0.5);
+                addObject(platform);
+            }
+        });
+
+        trafficTemplate.addEventListener('click', () => {
+            startProject();
+            baseplate.material.color.set(0x333333);
+            for(let i=0; i<20; i++) {
+                const car = createCube();
+                car.scale.set(1, 0.6, 2);
+                car.position.set(Math.random() < 0.5 ? -2 : 2, 0.3, Math.random()*40-20);
+                car.material.color.setHex(Math.random() * 0xffffff);
+                addObject(car);
+            }
+        });
+
+        // Helper functions for creating template objects
+        function createCube() {
+            const geometry = new THREE.BoxGeometry();
+            const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set(0, 1, 0);
+            cube.name = "Template_Cube";
+            cube.type = "Mesh";
+            return cube;
+        }
+
+        function createCircle() {
+            const geometry = new THREE.CircleGeometry(1, 32);
+            const material = new THREE.MeshStandardMaterial({ color: 0x0078d4 });
+            const circle = new THREE.Mesh(geometry, material);
+            circle.position.set(0, 1, 0);
+            circle.rotation.x = -Math.PI / 2;
+            circle.name = "Template_Circle";
+            circle.type = "Circle";
+            return circle;
+        }
+
+        function createStickman() {
+            const group = new THREE.Group();
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(0.25, 32, 32),
+                new THREE.MeshStandardMaterial({ color: 0xff9800 })
+            );
+            head.position.y = 2;
+            
+            const body = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.15, 1, 32),
+                new THREE.MeshStandardMaterial({ color: 0xff9800 })
+            );
+            body.position.y = 1.25;
+            
+            group.add(head);
+            group.add(body);
+            group.position.set(0, 1, 0);
+            group.name = "Template_Stickman";
+            group.type = "Stickman";
+            return group;
+        }
+    </script>
+</body>
 </html>
