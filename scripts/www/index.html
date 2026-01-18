@@ -1897,10 +1897,6 @@ player: true</textarea>
         modeRotate.addEventListener('click', () => setTransformMode('rotate', modeRotate));
         modeScale.addEventListener('click', () => setTransformMode('scale', modeScale));
 
-        // Multiplayer Initialization
-        const room = new WebsimSocket();
-        let peerAvatars = {};
-
         // Initialize World Node
         const worldNode = { 
             name: "World", 
@@ -2476,7 +2472,7 @@ player: true</textarea>
             }
         });
 
-        // Initialize Loading Screen & Room
+        // Initialize Loading Screen
         async function initApp() {
             const loaderFill = document.getElementById('loader-fill');
             const loadingScreen = document.getElementById('loading-screen');
@@ -2494,46 +2490,9 @@ player: true</textarea>
                     }, 500);
                 }
                 loaderFill.style.width = `${progress}%`;
-            }, 150);
-
-            await room.initialize();
-            initMultiplayerLogic();
+            }, 100);
         }
         initApp();
-
-        async function initMultiplayerLogic() {
-            const me = room.peers[room.clientId];
-            if (me) {
-                currentUserName = me.username;
-                document.getElementById('setting-user-name').value = currentUserName;
-            }
-
-            room.subscribePresence((presence) => {
-                // Handle peer visualization
-                Object.keys(presence).forEach(id => {
-                    if (id === room.clientId) return;
-                    if (!peerAvatars[id]) {
-                        const avatar = new THREE.Mesh(
-                            new THREE.CapsuleGeometry(0.3, 1),
-                            new THREE.MeshStandardMaterial({ color: 0x00a2ff })
-                        );
-                        scene.add(avatar);
-                        peerAvatars[id] = avatar;
-                    }
-                    const p = presence[id];
-                    if (p.pos) peerAvatars[id].position.set(p.pos.x, p.pos.y, p.pos.z);
-                    if (p.rot) peerAvatars[id].rotation.set(p.rot.x, p.rot.y, p.rot.z);
-                });
-                
-                // Cleanup disconnected
-                Object.keys(peerAvatars).forEach(id => {
-                    if (!presence[id]) {
-                        scene.remove(peerAvatars[id]);
-                        delete peerAvatars[id];
-                    }
-                });
-            });
-        }
 
 
         // Camera Controls
@@ -2688,13 +2647,7 @@ player: true</textarea>
                 lastStatsUpdate = now;
             }
 
-            // Broadcast presence
-            if (room.clientId) {
-                room.updatePresence({
-                    pos: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
-                    rot: { x: camera.rotation.x, y: camera.rotation.y, z: camera.rotation.z }
-                });
-            }
+
 
             moveSelectedObject();
             if (physicsEnabled) {
