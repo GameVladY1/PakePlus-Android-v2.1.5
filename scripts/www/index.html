@@ -53,7 +53,7 @@
             border-radius: 10px;
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .dropdown-menu {
                 position: fixed !important;
                 top: 50% !important;
@@ -138,12 +138,12 @@
             position: relative;
         }
 
-        /* Mobile Adjustments */
-        @media (max-width: 768px) {
+        /* Mobile & Tablet Adjustments */
+        @media (max-width: 1024px) {
             .top-bar {
                 overflow-x: auto;
                 white-space: nowrap;
-                padding-bottom: 6px; /* Added padding for scrollbar visibility */
+                padding-bottom: 6px;
             }
             
             .explorer {
@@ -2930,7 +2930,40 @@ player: true</textarea>
             closeFileModal();
         });
 
-        exportButton.addEventListener('click', () => {
+
+
+        async function saveFile(blob, suggestedName) {
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: suggestedName,
+                        types: [{
+                            description: suggestedName.endsWith('.html') ? 'HTML File' : 'JSON File',
+                            accept: { [suggestedName.endsWith('.html') ? 'text/html' : 'application/json']: [suggestedName.endsWith('.html') ? '.html' : '.json'] },
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    return true;
+                } catch (err) {
+                    if (err.name === 'AbortError') return false;
+                    console.error(err);
+                }
+            }
+            // Fallback for Android/Mobile/Safari
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = suggestedName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            return true;
+        }
+
+        exportButton.addEventListener('click', async () => {
             const sceneData = {
                 objects: objects.filter(obj => obj.type !== 'Script').map(obj => ({
                     type: obj.type,
@@ -2941,21 +2974,11 @@ player: true</textarea>
                     color: obj.material ? obj.material.color.getHex() : (obj.children?.[0]?.material?.color?.getHex() || null)
                 }))
             };
-            
             const blob = new Blob([JSON.stringify(sceneData)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'game-export.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert('Game exported successfully!');
+            if (await saveFile(blob, 'project-export.json')) alert('Project exported successfully!');
         });
 
-        exportHtmlButton.addEventListener('click', () => {
+        exportHtmlButton.addEventListener('click', async () => {
             const sceneData = objects.filter(obj => obj.type !== 'Script').map(obj => {
                 let scriptData = null;
                 if (obj.userData.script) {
@@ -3125,15 +3148,7 @@ player: true</textarea>
 </html>`;
 
             const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'webstudio-game.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert('HTML Project exported successfully!');
+            if (await saveFile(blob, 'webstudio-game.html')) alert('HTML Project exported successfully!');
         });
 
         leaveStudioButton.addEventListener('click', () => {
@@ -3190,19 +3205,18 @@ player: true</textarea>
             closeScriptEditor();
         });
 
-        // Initialize drag and drop for blocks
+        // Initialize drag and drop for blocks (Support for both Desktop & Mobile)
         function initializeBlocksDragDrop() {
             const workspace = blocksWorkspace;
             const palette = document.querySelector('.blocks-palette');
 
-            // Prevent redundant listeners
             if (palette.dataset.dragInitialized) return;
             palette.dataset.dragInitialized = "true";
 
+            // Standard Drag & Drop (Desktop)
             palette.addEventListener('dragstart', (e) => {
                 const block = e.target.closest('.block');
                 if (block) {
-                    // We transfer the type and inner content separately to avoid weird DOM nesting
                     e.dataTransfer.setData('block-type', block.dataset.type);
                     e.dataTransfer.setData('block-html', block.innerHTML);
                     e.dataTransfer.setData('block-color', block.style.background || '');
@@ -3219,20 +3233,79 @@ player: true</textarea>
                 const type = e.dataTransfer.getData('block-type');
                 const html = e.dataTransfer.getData('block-html');
                 const color = e.dataTransfer.getData('block-color');
-                
                 if (type && html) {
-                    const newBlock = document.createElement('div');
-                    newBlock.className = 'block';
-                    newBlock.dataset.type = type;
-                    newBlock.draggable = true;
-                    newBlock.innerHTML = html;
-                    if (color) newBlock.style.background = color;
-                    
-                    // Simple removal logic: click to remove from workspace?
-                    // For now just appending.
-                    workspace.appendChild(newBlock);
+                    createNewBlockInWorkspace(type, html, color);
                 }
             });
+
+            // Touch Drag & Drop (Mobile/Tablet)
+            let draggedTouchBlock = null;
+            let touchPreview = null;
+
+            palette.addEventListener('touchstart', (e) => {
+                const block = e.target.closest('.block');
+                if (block) {
+                    draggedTouchBlock = block;
+                    touchPreview = block.cloneNode(true);
+                    touchPreview.style.position = 'fixed';
+                    touchPreview.style.zIndex = '9999';
+                    touchPreview.style.pointerEvents = 'none';
+                    touchPreview.style.opacity = '0.7';
+                    touchPreview.style.width = block.offsetWidth + 'px';
+                    document.body.appendChild(touchPreview);
+                    updateTouchPreview(e.touches[0]);
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                if (touchPreview) {
+                    updateTouchPreview(e.touches[0]);
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchend', (e) => {
+                if (draggedTouchBlock && touchPreview) {
+                    const rect = workspace.getBoundingClientRect();
+                    const touch = e.changedTouches[0];
+                    if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                        createNewBlockInWorkspace(
+                            draggedTouchBlock.dataset.type, 
+                            draggedTouchBlock.innerHTML, 
+                            draggedTouchBlock.style.background
+                        );
+                    }
+                }
+                if (touchPreview) touchPreview.remove();
+                touchPreview = null;
+                draggedTouchBlock = null;
+            });
+
+            function updateTouchPreview(touch) {
+                if (touchPreview) {
+                    touchPreview.style.left = (touch.clientX - touchPreview.offsetWidth / 2) + 'px';
+                    touchPreview.style.top = (touch.clientY - touchPreview.offsetHeight / 2) + 'px';
+                }
+            }
+
+            function createNewBlockInWorkspace(type, html, color) {
+                const newBlock = document.createElement('div');
+                newBlock.className = 'block';
+                newBlock.dataset.type = type;
+                newBlock.draggable = true;
+                newBlock.innerHTML = html;
+                if (color) newBlock.style.background = color;
+                
+                // Clicking workspace block removes it on mobile for convenience
+                newBlock.addEventListener('click', () => {
+                    if (/Mobi|Android|Tablet|iPad/i.test(navigator.userAgent)) {
+                        if (confirm('Remove this block?')) newBlock.remove();
+                    }
+                });
+
+                workspace.appendChild(newBlock);
+            }
         }
 
         saveScriptButton.addEventListener('click', () => {
@@ -3595,15 +3668,16 @@ player: true</textarea>
             sidebarSettings.click();
         });
 
-        // Initialize Joystick for mobile
-        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-        if (isMobile) {
+        // Initialize Joystick for mobile & tablet
+        const isMobileOrTablet = /Mobi|Android|Tablet|iPad/i.test(navigator.userAgent) || (window.innerWidth <= 1024);
+        if (isMobileOrTablet) {
             const joystick = nipplejs.create({
                 zone: document.getElementById('joystick-container'),
                 mode: 'static',
-                position: { left: '70px', bottom: '100px' },
+                position: { left: '70px', bottom: '110px' },
                 color: 'white',
-                size: 100
+                size: 110,
+                threshold: 0.1
             });
 
             joystick.on('move', (evt, data) => {
@@ -3618,10 +3692,7 @@ player: true</textarea>
                 joystickVector.y = 0;
             });
             
-            // Adjust camera sensitivity for touch
-            camSensitivity = 0.005;
-            
-            // Force joystick container visibility on mobile
+            camSensitivity = 0.006;
             document.getElementById('joystick-container').style.display = 'block';
         }
 
