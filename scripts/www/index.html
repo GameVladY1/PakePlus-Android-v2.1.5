@@ -125,6 +125,10 @@
             background-color: var(--bg-input);
             color: var(--text-main);
         }
+        .menu-item:active {
+            transform: scale(0.92);
+            background-color: var(--border-light);
+        }
         .menu-item.active {
             color: var(--accent);
             background: rgba(0, 162, 255, 0.1);
@@ -327,20 +331,26 @@
         .explorer li {
             font-size: 13px;
             border-radius: 4px;
-            margin: 1px 6px;
+            margin: 1px 4px;
             transition: all 0.1s ease;
             cursor: pointer;
             user-select: none;
             color: #ccc;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         .explorer .item-row {
-            padding: 6px 8px;
+            padding: 8px 10px;
             display: flex;
             align-items: center;
-            gap: 4px;
-            border-radius: 4px;
+            gap: 8px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+        }
+        .explorer .item-row:active {
+            transform: scale(0.98);
+            background-color: var(--border);
         }
         .explorer .item-row:hover {
             background-color: var(--bg-input);
@@ -412,9 +422,11 @@
         }
         .children-container {
             display: none;
-            margin-left: 18px;
-            border-left: 1px solid var(--border);
+            margin-left: 20px;
+            border-left: 1.5px solid var(--border);
             padding-left: 4px;
+            margin-top: 2px;
+            margin-bottom: 4px;
         }
         .children-container.visible {
             display: block;
@@ -435,6 +447,22 @@
             flex-direction: column;
             box-sizing: border-box;
             overflow-y: auto;
+        }
+        
+        /* Custom Scrollbar for Properties Panel */
+        .properties::-webkit-scrollbar {
+            width: 6px;
+        }
+        .properties::-webkit-scrollbar-track {
+            background: var(--bg-panel);
+        }
+        .properties::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 10px;
+            border: 1px solid var(--bg-panel);
+        }
+        .properties::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
         }
         .properties .section {
             border-bottom: 1px solid var(--border);
@@ -1353,6 +1381,30 @@
             <svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
             <span>File</span>
         </div>
+        <div class="menu-item" id="edit-button" style="position: relative;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span>Edit</span>
+            <div class="dropdown-menu" id="edit-dropdown">
+                <div class="dropdown-item" id="edit-undo">Undo (Ctrl+Z)</div>
+                <div class="dropdown-item" id="edit-redo">Redo (Ctrl+Y)</div>
+                <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                <div class="dropdown-item" id="edit-copy">Copy (Ctrl+C)</div>
+                <div class="dropdown-item" id="edit-paste">Paste (Ctrl+V)</div>
+                <div class="dropdown-item" id="edit-duplicate">Duplicate (Ctrl+D)</div>
+            </div>
+        </div>
+        <div class="menu-item" id="view-button" style="position: relative;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>View</span>
+            <div class="dropdown-menu" id="view-dropdown">
+                <div class="dropdown-item" id="view-grid">Toggle Grid</div>
+                <div class="dropdown-item" id="view-stats">Toggle Stats</div>
+                <div class="dropdown-item" id="view-gizmos">Toggle Gizmos</div>
+                <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                <div class="dropdown-item" id="view-perspective">Perspective View</div>
+                <div class="dropdown-item" id="view-top">Top View</div>
+            </div>
+        </div>
         <div class="menu-item" id="insert-button">
             <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             <span>Insert</span>
@@ -1378,20 +1430,21 @@
         <div style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
         <div class="menu-item active" id="mode-translate" title="Move Tool">
             <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14M12 5l-3 3m3-3l3 3m-3 11l-3-3m3 3l3-3M5 12l3-3m-3 3l3 3m11-3l-3-3m3 3l-3 3"/></svg>
-            <span>Move</span>
         </div>
         <div class="menu-item" id="mode-rotate" title="Rotate Tool">
             <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-            <span>Rotate</span>
         </div>
         <div class="menu-item" id="mode-scale" title="Scale Tool">
             <svg viewBox="0 0 24 24"><path d="M21 3L3 21M21 21L3 3M21 12h-3M3 12h3M12 3v3M12 21v-3"/></svg>
-            <span>Scale</span>
         </div>
         <div style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
+        <div class="menu-item" id="toggle-space" title="Toggle Coordinate Space (L)">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <span id="space-label" style="font-size: 10px;">World</span>
+        </div>
         <div class="menu-item" id="toggle-snap" title="Snap to Grid">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-            <span id="snap-label">Snap Off</span>
+            <span id="snap-label" style="font-size: 10px;">Off</span>
         </div>
         <div style="flex: 1;"></div>
         <div class="menu-item" id="settings-button">
@@ -1727,6 +1780,18 @@ player: true</textarea>
                         Export Project (.html)
                     </button>
                     <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
+                    <button class="modal-button" id="save-local-button" style="justify-content: center; background: var(--bg-input);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        Save to Browser
+                    </button>
+                    <button class="modal-button" id="load-local-button" style="justify-content: center; background: var(--bg-input);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                        Load from Browser
+                    </button>
+                    <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
+                    <div id="project-info" style="font-size: 11px; color: var(--text-dim); text-align: center; padding: 4px;">
+                        Scene: <span id="info-obj-count">0</span> objects | <span id="info-script-count">0</span> scripts
+                    </div>
                     <button class="modal-button" id="leave-studio-button" style="justify-content: center; background: #c62828;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                         Leave Studio
@@ -1814,16 +1879,7 @@ player: true</textarea>
                             </label>
                         </div>
                     </div>
-                    <div class="settings-category">
-                        <h3>Account</h3>
-                        <div class="settings-option" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-                            <span>Display Name</span>
-                            <input type="text" id="setting-user-name" value="Guest" placeholder="Enter your name..." style="width: 100%;">
-                        </div>
-                        <p style="font-size: 11px; color: var(--text-dim); margin-top: 8px;">
-                            Only @GameVladY receives the Verified checkmark.
-                        </p>
-                    </div>
+
                     <div class="settings-category">
                         <h3>Credits</h3>
                         <p style="font-size: 14px; color: var(--text-main);">Made by: <span style="color: var(--accent); font-weight: 800;">@GameVladY</span></p>
@@ -2396,17 +2452,75 @@ player: true</textarea>
             }
         });
 
-        // Tools Menu & Dropdown Logic
-        const toolsButton = document.getElementById('tools-button');
-        const toolsDropdown = document.getElementById('tools-dropdown');
+        // Unified Dropdown Handler
+        const dropdownMenus = {
+            'edit-button': 'edit-dropdown',
+            'view-button': 'view-dropdown',
+            'tools-button': 'tools-dropdown'
+        };
 
-        toolsButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toolsDropdown.classList.toggle('visible');
+        Object.keys(dropdownMenus).forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            const menu = document.getElementById(dropdownMenus[btnId]);
+            if (btn && menu) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Close others
+                    Object.values(dropdownMenus).forEach(mId => {
+                        if (mId !== dropdownMenus[btnId]) document.getElementById(mId).classList.remove('visible');
+                    });
+                    menu.classList.toggle('visible');
+                });
+            }
         });
 
         document.addEventListener('click', () => {
-            toolsDropdown.classList.remove('visible');
+            Object.values(dropdownMenus).forEach(mId => document.getElementById(mId).classList.remove('visible'));
+        });
+
+        // Edit Menu Functionality
+        document.getElementById('edit-undo').addEventListener('click', () => alert('Undo not yet implemented (no history stack)'));
+        document.getElementById('edit-redo').addEventListener('click', () => alert('Redo not yet implemented (no history stack)'));
+        document.getElementById('edit-copy').addEventListener('click', copySelected);
+        document.getElementById('edit-paste').addEventListener('click', pasteSelected);
+        document.getElementById('edit-duplicate').addEventListener('click', duplicateSelected);
+
+        // View Menu Functionality
+        document.getElementById('view-grid').addEventListener('click', () => {
+            gridHelper.visible = !gridHelper.visible;
+            document.getElementById('setting-show-grid').checked = gridHelper.visible;
+        });
+        document.getElementById('view-stats').addEventListener('click', () => {
+            const stats = document.getElementById('stats-panel');
+            stats.style.display = stats.style.display === 'none' ? 'block' : 'none';
+        });
+        document.getElementById('view-gizmos').addEventListener('click', () => {
+            transformControls.visible = !transformControls.visible;
+            transformControls.enabled = transformControls.visible;
+        });
+        document.getElementById('view-perspective').addEventListener('click', () => {
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+        });
+        document.getElementById('view-top').addEventListener('click', () => {
+            camera.position.set(0, 15, 0);
+            camera.lookAt(0, 0, 0);
+        });
+
+        // Space Toggle Logic
+        let currentSpace = 'world';
+        const spaceToggle = document.getElementById('toggle-space');
+        const spaceLabel = document.getElementById('space-label');
+        spaceToggle.addEventListener('click', () => {
+            currentSpace = currentSpace === 'world' ? 'local' : 'world';
+            transformControls.setSpace(currentSpace);
+            spaceLabel.textContent = currentSpace.charAt(0).toUpperCase() + currentSpace.slice(1);
+            spaceToggle.classList.toggle('active', currentSpace === 'local');
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'l' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                spaceToggle.click();
+            }
         });
 
         // Tools Implementation
@@ -2868,11 +2982,68 @@ player: true</textarea>
 
         fileButton.addEventListener('click', (e) => {
             e.preventDefault();
+            // Update project stats before opening
+            document.getElementById('info-obj-count').textContent = objects.filter(o => o.type !== 'Script').length;
+            document.getElementById('info-script-count').textContent = objects.filter(o => o.type === 'Script').length;
             openFileModal();
         });
 
         closeFileModalButton.addEventListener('click', () => {
             closeFileModal();
+        });
+
+        // Local Save/Load features
+        document.getElementById('save-local-button').addEventListener('click', () => {
+            const sceneData = objects.map(obj => ({
+                type: obj.type,
+                name: obj.name,
+                position: {x: obj.position.x, y: obj.position.y, z: obj.position.z},
+                rotation: {x: obj.rotation.x, y: obj.rotation.y, z: obj.rotation.z},
+                scale: {x: obj.scale.x, y: obj.scale.y, z: obj.scale.z},
+                color: obj.material ? obj.material.color.getHex() : null,
+                code: obj.codeConfig || null
+            }));
+            localStorage.setItem('webstudio_autosave', JSON.stringify(sceneData));
+            alert('Project saved to browser storage!');
+        });
+
+        document.getElementById('load-local-button').addEventListener('click', () => {
+            const saved = localStorage.getItem('webstudio_autosave');
+            if (saved) {
+                if (confirm('Overwrite current scene with browser save?')) {
+                    // Clear scene
+                    const toRemove = objects.filter(obj => obj !== baseplate);
+                    toRemove.forEach(obj => {
+                        scene.remove(obj);
+                        if (obj.explorerElement) obj.explorerElement.remove();
+                    });
+                    objects.length = 0;
+                    addObject(baseplate);
+
+                    const data = JSON.parse(saved);
+                    data.forEach(d => {
+                        if (d.name === 'Baseplate') return;
+                        if (d.type === 'Script') {
+                            const s = { type: 'Script', name: d.name, codeConfig: d.code };
+                            addScriptToExplorer(s);
+                        } else {
+                            const geo = new THREE.BoxGeometry();
+                            const mat = new THREE.MeshStandardMaterial({ color: d.color || 0x00ff00 });
+                            const mesh = new THREE.Mesh(geo, mat);
+                            mesh.position.set(d.position.x, d.position.y, d.position.z);
+                            mesh.rotation.set(d.rotation.x, d.rotation.y, d.rotation.z);
+                            mesh.scale.set(d.scale.x, d.scale.y, d.scale.z);
+                            mesh.name = d.name;
+                            mesh.type = d.type;
+                            addObject(mesh);
+                        }
+                    });
+                    alert('Project loaded!');
+                    closeFileModal();
+                }
+            } else {
+                alert('No saved project found in browser.');
+            }
         });
 
         importObjInput.addEventListener('change', (e) => {
@@ -3244,23 +3415,25 @@ player: true</textarea>
 
             palette.addEventListener('touchstart', (e) => {
                 const block = e.target.closest('.block');
-                if (block) {
+                if (block && !e.target.closest('.block-value')) {
                     draggedTouchBlock = block;
                     touchPreview = block.cloneNode(true);
                     touchPreview.style.position = 'fixed';
                     touchPreview.style.zIndex = '9999';
                     touchPreview.style.pointerEvents = 'none';
-                    touchPreview.style.opacity = '0.7';
+                    touchPreview.style.opacity = '0.9';
+                    touchPreview.style.boxShadow = '0 10px 20px rgba(0,0,0,0.5)';
                     touchPreview.style.width = block.offsetWidth + 'px';
                     document.body.appendChild(touchPreview);
                     updateTouchPreview(e.touches[0]);
                 }
-            }, { passive: false });
+            }, { passive: true });
 
             window.addEventListener('touchmove', (e) => {
                 if (touchPreview) {
                     updateTouchPreview(e.touches[0]);
-                    e.preventDefault();
+                    // Only prevent default if we're actually dragging a block to allow scrolling palette
+                    if (draggedTouchBlock) e.preventDefault();
                 }
             }, { passive: false });
 
@@ -3623,10 +3796,6 @@ player: true</textarea>
 
         document.getElementById('setting-move-speed').addEventListener('input', (e) => {
             moveSpeed = parseFloat(e.target.value);
-        });
-
-        document.getElementById('setting-user-name').addEventListener('input', (e) => {
-            currentUserName = e.target.value.trim() || 'Guest';
         });
 
         // Mobile Panel Toggles
